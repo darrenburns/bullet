@@ -37,7 +37,7 @@ fn main_loop(state: &mut EditorState) {
         match key {
           Key::Ctrl('q') => { break; }
 
-          Key::Char(ch) => {
+          Key::Right => {
             let new_x = state.cursor_pos.x + 1;
             state.set_cursor_x(&new_x);
           }
