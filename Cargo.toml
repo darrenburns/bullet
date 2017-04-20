@@ -1,0 +1,7 @@
+[package]
+name = "bullet"
+version = "0.1.0"
+authors = ["Darren Burns <darrenb900@gmail.com>"]
+
+[dependencies]
+rustbox = "*"
