@@ -1,6 +1,7 @@
 extern crate rustbox;
 
 mod editor_state;
+mod editor_view;
 
 use std::io::Read;
 
@@ -19,7 +20,7 @@ fn main() {
     Result::Ok(v) => v,
     Result::Err(e) => panic!("{}", e)
   };
-  render_initial_screen(&screen);
+  editor_view::render_initial_screen(&screen);
 
   let mut state: EditorState = EditorState {
     screen: screen, 
@@ -49,12 +50,7 @@ fn main_loop(state: &mut EditorState) {
       Err(e) => panic!("{}", e.description()),
       _ => { }
     }
-    state.screen.present();
+    editor_view::update_screen(&state.screen, &state);
   }
 }
 
-fn render_initial_screen(screen: &RustBox) {
-  screen.print(0, screen.height() - 1, rustbox::RB_BOLD, Color::Black, Color::White, &format!("{0: >1$}", "SomeFile.md ", screen.width()));
-  screen.set_cursor(0, 0);
-  screen.present();
-}
