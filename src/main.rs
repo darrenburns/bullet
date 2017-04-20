@@ -19,9 +19,7 @@ fn main() {
     Result::Ok(v) => v,
     Result::Err(e) => panic!("{}", e)
   };
-
-  screen.print(1, 1, rustbox::RB_BOLD, Color::White, Color::Black, "SomeFile.md");
-  screen.present();
+  render_initial_screen(&screen);
 
   let mut state: EditorState = EditorState {
     screen: screen, 
@@ -41,7 +39,11 @@ fn main_loop(state: &mut EditorState) {
             let new_x = state.cursor_pos.x + 1;
             state.set_cursor_x(&new_x);
           }
-          _ => { }
+          Key::Left => {
+            let new_x = state.cursor_pos.x - 1;
+            state.set_cursor_x(&new_x);
+          }
+          _ => {}
         }
       },
       Err(e) => panic!("{}", e.description()),
@@ -49,4 +51,9 @@ fn main_loop(state: &mut EditorState) {
     }
     state.screen.present();
   }
+}
+
+fn render_initial_screen(screen: &RustBox) {
+  screen.print(0, screen.height() - 1, rustbox::RB_BOLD, Color::Black, Color::White, &format!("{0: >1$}", "SomeFile.md ", screen.width()));
+  screen.present();
 }
