@@ -55,5 +55,6 @@ fn main_loop(state: &mut EditorState) {
 
 fn render_initial_screen(screen: &RustBox) {
   screen.print(0, screen.height() - 1, rustbox::RB_BOLD, Color::Black, Color::White, &format!("{0: >1$}", "SomeFile.md ", screen.width()));
+  screen.set_cursor(0, 0);
   screen.present();
 }
