@@ -3,7 +3,6 @@ extern crate rustbox;
 use rustbox::RustBox;
 
 pub struct EditorState {
-  pub screen: RustBox,
   pub cursor_pos: Coordinate
 }
 
@@ -14,8 +13,7 @@ pub struct Coordinate {
 }
 
 impl EditorState {
-  pub fn set_cursor_x(&mut self, new_x: &isize) {
-    self.cursor_pos.x = *new_x;
-    self.screen.set_cursor(*new_x, self.cursor_pos.y);
+  pub fn set_cursor_pos(&mut self, new_pos: Coordinate) {
+    self.cursor_pos = new_pos;
   }
 }

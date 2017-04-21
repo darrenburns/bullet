@@ -23,26 +23,37 @@ fn main() {
   editor_view::render_initial_screen(&screen);
 
   let mut state: EditorState = EditorState {
-    screen: screen, 
     cursor_pos: Coordinate {x: 0, y: 0} 
   }; 
-  main_loop(&mut state);
+  main_loop(&mut state, &screen);
 }
 
-fn main_loop(state: &mut EditorState) {
+fn main_loop(state: &mut EditorState, screen: &RustBox) {
   loop {
-    match state.screen.poll_event(false) {
+    match screen.poll_event(false) {
       Ok(rustbox::Event::KeyEvent(key)) => {
         match key {
           Key::Ctrl('q') => { break; }
 
           Key::Right => {
             let new_x = state.cursor_pos.x + 1;
-            state.set_cursor_x(&new_x);
+            let new_y = state.cursor_pos.y;
+            state.set_cursor_pos(Coordinate {x: new_x, y: new_y});
           }
           Key::Left => {
             let new_x = state.cursor_pos.x - 1;
-            state.set_cursor_x(&new_x);
+            let new_y = state.cursor_pos.y;
+            state.set_cursor_pos(Coordinate {x: new_x, y: new_y});
+          }
+          Key::Up => {
+            let new_x = state.cursor_pos.x;
+            let new_y = state.cursor_pos.y - 1;
+            state.set_cursor_pos(Coordinate {x: new_x, y: new_y});
+          }
+          Key::Down => {
+            let new_x = state.cursor_pos.x;
+            let new_y = state.cursor_pos.y + 1;
+            state.set_cursor_pos(Coordinate {x: new_x, y: new_y});
           }
           _ => {}
         }
@@ -50,7 +61,7 @@ fn main_loop(state: &mut EditorState) {
       Err(e) => panic!("{}", e.description()),
       _ => { }
     }
-    editor_view::update_screen(&state.screen, &state);
+    editor_view::update_screen(&screen, &state);
   }
 }
 
