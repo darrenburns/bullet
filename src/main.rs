@@ -25,6 +25,7 @@ fn main() {
     cursor_pos: Coordinate {x: 0, y: 0},
     content: Default::default()
   };
+  state.content.lines.push("".to_string());
   editor_view::update_screen(&screen, &state); 
   main_loop(&mut state, &screen);
 }
@@ -57,7 +58,13 @@ fn main_loop(state: &mut EditorState, screen: &RustBox) {
             state.set_cursor_pos(Coordinate {x: new_x, y: new_y});
           }
           Key::Char(ch) => {
-
+            let new_x = state.cursor_pos.x + 1;
+            let new_y = state.cursor_pos.y;
+            state.content.insert_char(&ch, &(state.cursor_pos.x as usize), &(state.cursor_pos.y as usize));
+            state.set_cursor_pos(Coordinate {
+              x: new_x, 
+              y: new_y
+            });
           }
           _ => {}
         }

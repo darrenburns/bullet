@@ -33,7 +33,7 @@ pub struct EditorContent {
 }
 
 impl EditorContent {
-  fn insert_char(&mut self, ch: &char, x: &usize, y: &usize) {
+  pub fn insert_char(&mut self, ch: &char, x: &usize, y: &usize) {
     self.lines[*y].insert(*x, *ch);
   }
 }
