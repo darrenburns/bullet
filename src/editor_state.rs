@@ -16,7 +16,7 @@ impl fmt::Display for Coordinate {
 
 pub struct EditorState {
   pub cursor_pos: Coordinate,
-  pub scroll: usize,
+  pub scroll: EditorScroll,
   pub content: EditorContent
 }
 
@@ -56,6 +56,12 @@ impl EditorState {
   pub fn cursor_within_line_bounds(&self) -> bool {
     self.cursor_pos.x < self.content.lines[self.cursor_pos.y].len()
   }
+}
+
+#[derive(Default)]
+pub struct EditorScroll {
+  pub v_scroll: usize,
+  pub h_scroll: usize
 }
 
 #[derive(Default, Debug)]
