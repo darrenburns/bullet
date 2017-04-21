@@ -45,7 +45,7 @@ fn main_loop(state: &mut EditorState, screen: &RustBox) {
             let new_y = state.cursor_pos.y;
             state.set_cursor_pos(Coordinate {x: new_x, y: new_y});
           }
-          Key::Up => {
+          Key::Up if state.cursor_pos.y > 0 => {
             let new_x = state.cursor_pos.x;
             let new_y = state.cursor_pos.y - 1;
             state.set_cursor_pos(Coordinate {x: new_x, y: new_y});
