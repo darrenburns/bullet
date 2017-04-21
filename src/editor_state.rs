@@ -25,3 +25,8 @@ impl EditorState {
     self.cursor_pos = new_pos;
   }
 }
+
+#[derive(Default, Debug)]
+struct EditorContent {
+  lines: Vec<String>
+}
