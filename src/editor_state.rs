@@ -17,7 +17,8 @@ impl fmt::Display for Coordinate {
 }
 
 pub struct EditorState {
-  pub cursor_pos: Coordinate
+  pub cursor_pos: Coordinate,
+  pub content: EditorContent
 }
 
 impl EditorState {
@@ -27,6 +28,6 @@ impl EditorState {
 }
 
 #[derive(Default, Debug)]
-struct EditorContent {
-  lines: Vec<String>
+pub struct EditorContent {
+  pub lines: Vec<String>
 }

@@ -22,7 +22,8 @@ fn main() {
   };
 
   let mut state: EditorState = EditorState {
-    cursor_pos: Coordinate {x: 0, y: 0} 
+    cursor_pos: Coordinate {x: 0, y: 0},
+    content: Default::default()
   };
   editor_view::update_screen(&screen, &state); 
   main_loop(&mut state, &screen);
@@ -54,6 +55,9 @@ fn main_loop(state: &mut EditorState, screen: &RustBox) {
             let new_x = state.cursor_pos.x;
             let new_y = state.cursor_pos.y + 1;
             state.set_cursor_pos(Coordinate {x: new_x, y: new_y});
+          }
+          Key::Char(ch) => {
+
           }
           _ => {}
         }
