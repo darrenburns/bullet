@@ -44,6 +44,10 @@ impl EditorState {
     self.set_cursor_pos(Coordinate {x: new_x, y: new_y});
   }
 
+  pub fn origin_cursor_x(&mut self) {
+    self.cursor_pos.x = 0;
+  }
+
   pub fn set_cursor_pos(&mut self, new_pos: Coordinate) {
     self.cursor_pos = new_pos;
   }

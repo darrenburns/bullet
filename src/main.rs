@@ -46,7 +46,9 @@ fn main_loop(state: &mut EditorState, screen: &RustBox) {
           }
           Key::Down if state.cursor_pos.y < state.content.lines.len() => {
             state.inc_cursor_y();
-            state.content.insert_line(&state.cursor_pos.y, "");
+            if state.cursor_pos.y == state.content.lines.len() {
+              state.content.insert_line(&state.cursor_pos.y, "");
+            }
           }
           Key::Char(ch) => {
             state.content.insert_char(&ch, &state.cursor_pos.x, &state.cursor_pos.y);
