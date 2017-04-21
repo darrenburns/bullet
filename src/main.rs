@@ -21,6 +21,7 @@ fn main() {
 
   let mut state: EditorState = EditorState {
     cursor_pos: Coordinate {x: 0, y: 0},
+    scroll: 0,
     content: Default::default()
   };
   state.content.lines.push("".to_string());

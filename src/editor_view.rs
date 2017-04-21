@@ -3,9 +3,11 @@ extern crate rustbox;
 use rustbox::{Color, RustBox};
 use editor_state::EditorState;
 
+static INFO_BAR_HEIGHT: usize = 1;
+
 pub fn update_screen(screen: &RustBox, state: &EditorState) {
   screen.clear();
-  screen.print(0, screen.height() - 1, rustbox::RB_BOLD, Color::Black, Color::White, &info_bar_text(&screen, &state));
+  screen.print(0, screen.height() - INFO_BAR_HEIGHT, rustbox::RB_BOLD, Color::Black, Color::White, &info_bar_text(&screen, &state));
   render_editor_content(&screen, &state);
   screen.set_cursor(state.cursor_pos.x as isize, state.cursor_pos.y as isize);
   screen.present();
@@ -13,7 +15,9 @@ pub fn update_screen(screen: &RustBox, state: &EditorState) {
 
 pub fn render_editor_content(screen: &RustBox, state: &EditorState) {
   for y in 0..state.content.lines.len() {
-    screen.print(0, y, rustbox::RB_NORMAL, Color::White, Color::Black, &state.content.lines[y]);
+    if y < screen.height() - INFO_BAR_HEIGHT {
+      screen.print(0, y, rustbox::RB_NORMAL, Color::White, Color::Black, &state.content.lines[y]);
+    }
   }
 }
 

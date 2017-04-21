@@ -16,6 +16,7 @@ impl fmt::Display for Coordinate {
 
 pub struct EditorState {
   pub cursor_pos: Coordinate,
+  pub scroll: usize,
   pub content: EditorContent
 }
 
