@@ -2,8 +2,6 @@ extern crate rustbox;
 
 use std::fmt;
 
-use rustbox::RustBox;
-
 #[derive(Default, Debug)]
 pub struct Coordinate {
   pub x: usize, 

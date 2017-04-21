@@ -3,15 +3,13 @@ extern crate rustbox;
 mod editor_state;
 mod editor_view;
 
-use std::io::Read;
-
 use std::error::Error;
 use std::default::Default;
 
 use editor_state::EditorState;
 use editor_state::Coordinate;
 
-use rustbox::{Color, RustBox};
+use rustbox::RustBox;
 use rustbox::Key;
 
 fn main() {
