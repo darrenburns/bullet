@@ -37,7 +37,7 @@ fn main_loop(state: &mut EditorState, screen: &RustBox) {
         match key {
           Key::Ctrl('q') => { break; }
 
-          Key::Right => {
+          Key::Right if state.cursor_within_line_bounds() => {
             let new_x = state.cursor_pos.x + 1;
             let new_y = state.cursor_pos.y;
             state.set_cursor_pos(Coordinate {x: new_x, y: new_y});
@@ -52,7 +52,7 @@ fn main_loop(state: &mut EditorState, screen: &RustBox) {
             let new_y = state.cursor_pos.y - 1;
             state.set_cursor_pos(Coordinate {x: new_x, y: new_y});
           }
-          Key::Down if state.cursor_pos.y as usize <= state.content.lines.len() => {
+          Key::Down if state.cursor_pos.y <= state.content.lines.len() => {
             let new_x = state.cursor_pos.x;
             let new_y = state.cursor_pos.y + 1;
             state.set_cursor_pos(Coordinate {x: new_x, y: new_y});
@@ -60,7 +60,7 @@ fn main_loop(state: &mut EditorState, screen: &RustBox) {
           Key::Char(ch) => {
             let new_x = state.cursor_pos.x + 1;
             let new_y = state.cursor_pos.y;
-            state.content.insert_char(&ch, &(state.cursor_pos.x as usize), &(state.cursor_pos.y as usize));
+            state.content.insert_char(&ch, &state.cursor_pos.x, &state.cursor_pos.y);
             state.set_cursor_pos(Coordinate {
               x: new_x, 
               y: new_y

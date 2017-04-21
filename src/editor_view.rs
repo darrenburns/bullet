@@ -7,7 +7,7 @@ pub fn update_screen(screen: &RustBox, state: &EditorState) {
   screen.clear();
   screen.print(0, screen.height() - 1, rustbox::RB_BOLD, Color::Black, Color::White, &info_bar_text(&screen, &state));
   render_editor_content(&screen, &state);
-  screen.set_cursor(state.cursor_pos.x, state.cursor_pos.y);
+  screen.set_cursor(state.cursor_pos.x as isize, state.cursor_pos.y as isize);
   screen.present();
 }
 

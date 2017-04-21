@@ -6,8 +6,8 @@ use rustbox::RustBox;
 
 #[derive(Default, Debug)]
 pub struct Coordinate {
-  pub x: isize, 
-  pub y: isize
+  pub x: usize, 
+  pub y: usize
 }
 
 impl fmt::Display for Coordinate {
@@ -24,6 +24,10 @@ pub struct EditorState {
 impl EditorState {
   pub fn set_cursor_pos(&mut self, new_pos: Coordinate) {
     self.cursor_pos = new_pos;
+  }
+
+  pub fn cursor_within_line_bounds(&self) -> bool {
+    self.cursor_pos.x < self.content.lines[self.cursor_pos.y].len()
   }
 }
 
