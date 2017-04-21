@@ -61,9 +61,15 @@ pub struct EditorContent {
 }
 
 impl EditorContent {
+
   pub fn insert_char(&mut self, ch: &char, x: &usize, y: &usize) {
     let mut chars: Vec<char> = self.lines[*y].chars().collect();
     chars.insert(*x, *ch);
     self.lines[*y] = chars.into_iter().collect::<String>();
   }
+
+  pub fn insert_line(&mut self, y: &usize, initial_content: &str) {
+    self.lines.insert(*y, initial_content.to_owned());
+  }
+
 }
