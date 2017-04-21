@@ -11,6 +11,6 @@ pub fn update_screen(screen: &RustBox, state: &EditorState) {
 }
 
 fn info_bar_text(screen: &RustBox, state: &EditorState) -> String {
-  format!("{0: <2$}{1: >2$}", state.cursor_pos, "SomeFile.md", (screen.width()) - 10)  // Update to subtract len of filename
+  format!("{0: <2$}{1: >2$}", state.cursor_pos, "SomeFile.md", (screen.width()) - 10)  // TODO: Update to subtract len of filename
 }
 
