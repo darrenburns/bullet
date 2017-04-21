@@ -31,3 +31,9 @@ impl EditorState {
 pub struct EditorContent {
   pub lines: Vec<String>
 }
+
+impl EditorContent {
+  fn insert_char(&mut self, ch: &char, x: &usize, y: &usize) {
+    self.lines[*y].insert(*x, *ch);
+  }
+}
