@@ -51,13 +51,8 @@ fn main_loop(state: &mut EditorState, screen: &RustBox) {
             state.content.insert_line(&state.cursor_pos.y, "");
           }
           Key::Char(ch) => {
-            let new_x = state.cursor_pos.x + 1;
-            let new_y = state.cursor_pos.y;
             state.content.insert_char(&ch, &state.cursor_pos.x, &state.cursor_pos.y);
-            state.set_cursor_pos(Coordinate {
-              x: new_x, 
-              y: new_y
-            });
+            state.inc_cursor_x();
           }
           _ => {}
         }
