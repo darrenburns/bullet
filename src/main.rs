@@ -52,7 +52,7 @@ fn main_loop(state: &mut EditorState, screen: &RustBox) {
             let new_y = state.cursor_pos.y - 1;
             state.set_cursor_pos(Coordinate {x: new_x, y: new_y});
           }
-          Key::Down => {
+          Key::Down if state.cursor_pos.y as usize <= state.content.lines.len() => {
             let new_x = state.cursor_pos.x;
             let new_y = state.cursor_pos.y + 1;
             state.set_cursor_pos(Coordinate {x: new_x, y: new_y});

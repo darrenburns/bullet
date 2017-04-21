@@ -34,6 +34,8 @@ pub struct EditorContent {
 
 impl EditorContent {
   pub fn insert_char(&mut self, ch: &char, x: &usize, y: &usize) {
-    self.lines[*y].insert(*x, *ch);
+    let mut chars: Vec<char> = self.lines[*y].chars().collect();
+    chars.insert(*x, *ch);
+    self.lines[*y] = chars.into_iter().collect::<String>();
   }
 }
