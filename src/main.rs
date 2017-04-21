@@ -16,15 +16,15 @@ use rustbox::Key;
 
 fn main() {
 
-  let screen = match::RustBox::init(Default::default()) {
+  let screen = match RustBox::init(Default::default()) {
     Result::Ok(v) => v,
     Result::Err(e) => panic!("{}", e)
   };
-  editor_view::render_initial_screen(&screen);
 
   let mut state: EditorState = EditorState {
     cursor_pos: Coordinate {x: 0, y: 0} 
-  }; 
+  };
+  editor_view::update_screen(&screen, &state); 
   main_loop(&mut state, &screen);
 }
 

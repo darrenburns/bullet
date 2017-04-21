@@ -1,15 +1,23 @@
 extern crate rustbox;
 
+use std::fmt;
+
 use rustbox::RustBox;
 
-pub struct EditorState {
-  pub cursor_pos: Coordinate
-}
-
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Coordinate {
   pub x: isize, 
   pub y: isize
+}
+
+impl fmt::Display for Coordinate {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    write!(f, "x {}, y {}", self.x, self.y)
+  }
+}
+
+pub struct EditorState {
+  pub cursor_pos: Coordinate
 }
 
 impl EditorState {
