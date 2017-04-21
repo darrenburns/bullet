@@ -48,6 +48,7 @@ fn main_loop(state: &mut EditorState, screen: &RustBox) {
             state.inc_cursor_y();
             if state.cursor_pos.y == state.content.lines.len() {
               state.content.insert_line(&state.cursor_pos.y, "");
+              state.origin_cursor_x();
             }
           }
           Key::Char(ch) => {
