@@ -47,12 +47,17 @@ fn main_loop(state: &mut EditorState, screen: &RustBox) {
             state.cursor_line_up();
           }
           Key::Down => {
-            state.cursor_line_down();
-            // If we're on the last line, create a new line on pressing down
+            if state.cursor_pos.y == screen.height() - 2 {
+              state.scroll.v_scroll += 1;
+            } else {
+              state.inc_cursor_y();
+            }
+
             if state.line_number == state.content.lines.len() + 1 {
               state.content.insert_line(&state.line_number, "");
               state.origin_cursor_x();
             }
+
           }
           Key::Char(ch) => {
             state.content.insert_char(&ch, &state.cursor_pos.x, &state.line_number);

@@ -25,7 +25,12 @@ fn info_bar_text(screen: &RustBox, state: &EditorState) -> String {
   let left_text = "Ctrl + Q to quit.";
   let file_name = "SomeFile.md";
   let cursor_pos_string = state.cursor_pos.to_string();
-  format!("{0}{1}{2: >3$}", left_text, cursor_pos_string, file_name, 
+  format!("{0}{1} vscroll:{3}, sheight: {4}{2: >5$}", 
+    left_text, 
+    cursor_pos_string, 
+    file_name,
+    state.scroll.v_scroll,
+    screen.height(),
     screen.width() - left_text.len() - cursor_pos_string.len())
 }
 
