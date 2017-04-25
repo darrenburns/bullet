@@ -19,7 +19,7 @@ pub fn render_editor_content(screen: &RustBox, state: &EditorState) {
   let upper_render_limit = state.scroll.v_scroll + 
     cmp::min(screen.height() - INFO_BAR_HEIGHT, state.content.lines.len());
   for y in state.scroll.v_scroll..upper_render_limit {
-    if y < screen.height() - INFO_BAR_HEIGHT {
+    if y - state.scroll.v_scroll < screen.height() - INFO_BAR_HEIGHT {
       screen.print(0, y - state.scroll.v_scroll, rustbox::RB_NORMAL, Color::White, Color::Black, &state.content.lines[y]);
     }
   }
