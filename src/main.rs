@@ -45,10 +45,6 @@ fn main_loop(state: &mut EditorState, screen: &RustBox) {
           }
           Key::Up if state.line_number > 1 => {
             state.dec_cursor_y();
-            if !state.cursor_within_line_bounds() {
-              let line_num = state.line_number;
-              state.cursor_to_end_of_line(&line_num);
-            }
           }
           Key::Down => {
             // Insert a line if required, and go to the start of the line
@@ -62,10 +58,7 @@ fn main_loop(state: &mut EditorState, screen: &RustBox) {
             } else {
               state.inc_cursor_y();
             }
-            if !state.cursor_within_line_bounds() {
-              let line_num = state.line_number;
-              state.cursor_to_end_of_line(&line_num);
-            }
+
 
           }
           Key::Char(ch) => {
