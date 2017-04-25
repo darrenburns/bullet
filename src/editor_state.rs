@@ -92,7 +92,7 @@ impl EditorContent {
   pub fn insert_char(&mut self, ch: &char, x: &usize, line_num: &usize) {
     let mut chars: Vec<char> = self.lines[*line_num-1].chars().collect();
     chars.insert(*x, *ch);
-    self.lines[*line_num] = chars.into_iter().collect::<String>();
+    self.lines[*line_num-1] = chars.into_iter().collect::<String>();
   }
 
   pub fn insert_line(&mut self, line_num: &usize, initial_content: &str) {
