@@ -56,6 +56,10 @@ impl EditorState {
   pub fn cursor_within_line_bounds(&self) -> bool {
     self.cursor_pos.x < self.content.lines[self.cursor_pos.y].len()
   }
+
+  fn y_coord_to_line_num(&self) -> usize {
+    self.scroll.v_scroll + self.cursor_pos.y + 1
+  }
 }
 
 #[derive(Default)]
