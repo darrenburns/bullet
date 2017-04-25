@@ -68,7 +68,7 @@ impl EditorState {
   }
 
   pub fn cursor_within_line_bounds(&self) -> bool {
-    self.cursor_pos.x < self.content.lines[self.cursor_pos.y].len()
+    self.cursor_pos.x < self.content.lines[self.line_number - 1].len()
   }
 
   fn y_coord_to_line_num(&self) -> usize {
@@ -89,14 +89,14 @@ pub struct EditorContent {
 
 impl EditorContent {
 
-  pub fn insert_char(&mut self, ch: &char, x: &usize, y: &usize) {
-    let mut chars: Vec<char> = self.lines[*y].chars().collect();
+  pub fn insert_char(&mut self, ch: &char, x: &usize, line_num: &usize) {
+    let mut chars: Vec<char> = self.lines[*line_num-1].chars().collect();
     chars.insert(*x, *ch);
-    self.lines[*y] = chars.into_iter().collect::<String>();
+    self.lines[*line_num] = chars.into_iter().collect::<String>();
   }
 
-  pub fn insert_line(&mut self, y: &usize, initial_content: &str) {
-    self.lines.insert(*y, initial_content.to_owned());
+  pub fn insert_line(&mut self, line_num: &usize, initial_content: &str) {
+    self.lines.insert(*line_num - 1, initial_content.to_owned());
   }
 
 }
