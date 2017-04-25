@@ -40,6 +40,7 @@ impl EditorState {
     let new_y = self.cursor_pos.y - 1;
     self.set_cursor_pos(Coordinate {x: new_x, y: new_y});
     self.line_number = self.y_coord_to_line_num();
+    self.correct_cursor_line_boundary();
   }
 
   pub fn inc_cursor_y(&mut self) {
@@ -47,6 +48,14 @@ impl EditorState {
     let new_y = self.cursor_pos.y + 1;
     self.set_cursor_pos(Coordinate {x: new_x, y: new_y});
     self.line_number = self.y_coord_to_line_num();
+    self.correct_cursor_line_boundary();
+  }
+
+  fn correct_cursor_line_boundary(&mut self) {
+    if !self.cursor_within_line_bounds() {
+      let line_num = self.line_number;
+      self.cursor_to_end_of_line(&line_num);
+    }
   }
 
   pub fn origin_cursor_x(&mut self) {
