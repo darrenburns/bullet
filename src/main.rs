@@ -58,8 +58,6 @@ fn main_loop(state: &mut EditorState, screen: &RustBox) {
             } else {
               state.inc_cursor_y();
             }
-
-
           }
           Key::Char(ch) => {
             state.content.insert_char(&ch, &state.cursor_pos.x, &state.line_number);
