@@ -44,18 +44,19 @@ fn main_loop(state: &mut EditorState, screen: &RustBox) {
             state.dec_cursor_x();
           }
           Key::Up if state.line_number > 1 => {
-            state.cursor_line_up();
+            state.dec_cursor_y();
           }
           Key::Down => {
+            // Insert a line if required, and go to the start of the line
+            if state.line_number == state.content.lines.len() {
+              state.content.insert_line(&(state.line_number + 1), "");
+              state.origin_cursor_x();
+              state.line_number += 1;
+            }
             if state.cursor_pos.y == screen.height() - 2 {
               state.scroll.v_scroll += 1;
             } else {
               state.inc_cursor_y();
-            }
-
-            if state.line_number == state.content.lines.len() + 1 {
-              state.content.insert_line(&state.line_number, "");
-              state.origin_cursor_x();
             }
 
           }
