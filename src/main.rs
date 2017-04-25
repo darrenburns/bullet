@@ -62,6 +62,10 @@ fn main_loop(state: &mut EditorState, screen: &RustBox) {
             } else {
               state.inc_cursor_y();
             }
+            if !state.cursor_within_line_bounds() {
+              let line_num = state.line_number;
+              state.cursor_to_end_of_line(&line_num);
+            }
 
           }
           Key::Char(ch) => {
