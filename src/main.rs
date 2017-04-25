@@ -43,8 +43,8 @@ fn main_loop(state: &mut EditorState, screen: &RustBox) {
           Key::Left if state.cursor_pos.x > 0 => {
             state.dec_cursor_x();
           }
-          Key::Up if state.cursor_pos.y > 0 => {
-            state.dec_cursor_y();
+          Key::Up if state.line_number > 1 => {
+            state.cursor_line_up();
           }
           Key::Down if state.cursor_pos.y < state.content.lines.len() => {
             state.inc_cursor_y();

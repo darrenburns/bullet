@@ -22,6 +22,17 @@ pub struct EditorState {
 }
 
 impl EditorState {
+
+  pub fn cursor_line_down(&mut self) {
+    self.inc_cursor_y();
+    self.line_number = self.y_coord_to_line_num();
+  }
+
+  pub fn cursor_line_up(&mut self) {
+    self.dec_cursor_y();
+    self.line_number = self.y_coord_to_line_num();
+  }
+
   pub fn inc_cursor_x(&mut self) {
     let new_x = self.cursor_pos.x + 1;
     let new_y = self.cursor_pos.y;
@@ -38,12 +49,14 @@ impl EditorState {
     let new_x = self.cursor_pos.x;
     let new_y = self.cursor_pos.y - 1;
     self.set_cursor_pos(Coordinate {x: new_x, y: new_y});
+    self.line_number = self.y_coord_to_line_num();
   }
 
   pub fn inc_cursor_y(&mut self) {
     let new_x = self.cursor_pos.x;
     let new_y = self.cursor_pos.y + 1;
     self.set_cursor_pos(Coordinate {x: new_x, y: new_y});
+    self.line_number = self.y_coord_to_line_num();
   }
 
   pub fn origin_cursor_x(&mut self) {
