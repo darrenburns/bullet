@@ -21,8 +21,9 @@ fn main() {
 
   let mut state: EditorState = EditorState {
     cursor_pos: Coordinate {x: 0, y: 0},
+    line_number: 0,
     scroll: Default::default(),
-    content: Default::default()
+    content: Default::default(),
   };
   state.content.lines.push("".to_string());
   editor_view::update_screen(&screen, &state); 
