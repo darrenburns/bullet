@@ -59,11 +59,25 @@ impl EditorState {
 
   pub fn cursor_within_line_bounds(&self) -> bool {
     self.cursor_pos.x < self.content.lines[self.line_number - 1].len()
+        && self.cursor_pos.x > 0
   }
 
   pub fn y_coord_to_line_num(&self) -> usize {
     self.scroll.v_scroll + self.cursor_pos.y + 1
   }
+
+  pub fn cursor_to_end_of_line(&mut self, line_number: &usize) {
+    let new_coords = Coordinate {
+      x: self.get_line_by_line_number(line_number).len(),
+      y: *line_number - 1
+    };
+    self.set_cursor_pos(new_coords);
+  }
+
+  pub fn get_line_by_line_number(&mut self, line_number: &usize) -> &str {
+    &self.content.lines[*line_number - 1]
+  }
+
 }
 
 #[derive(Default)]
