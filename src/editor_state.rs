@@ -92,15 +92,12 @@ impl EditorState {
 
   pub fn cursor_to_end_of_line(&mut self, line_number: &usize) {
     let new_coords = Coordinate {
-      x: self.get_line_by_line_number(line_number).len(),
+      x: self.content.get_line_by_line_number(line_number).len(),
       y: *line_number - 1
     };
     self.set_cursor_pos(new_coords);
   }
 
-  pub fn get_line_by_line_number(&mut self, line_number: &usize) -> &str {
-    &self.content.lines[*line_number - 1]
-  }
 
 }
 
@@ -131,6 +128,10 @@ impl EditorContent {
 
   pub fn insert_line(&mut self, line_num: &usize, initial_content: &str) {
     self.lines.insert(*line_num - 1, initial_content.to_owned());
+  }
+
+  pub fn get_line_by_line_number(&mut self, line_number: &usize) -> &str {
+    &self.lines[*line_number - 1]
   }
 
 }
@@ -188,6 +189,11 @@ mod tests {
       assert_eq!(state.cursor_pos.x, 0);
     }
 
+    it "should be able to set the cursor to x=0 for the current line" {
+      state.origin_cursor_x();
+      assert_eq!(state.cursor_pos.x, 0);
+    }
+
     ignore "should move cursor to the end of a line when moving down from a longer line" {
       state.content.insert_line(&2, "aslkfdjlasjdf");
       state.content.insert_line(&3, "asd");
@@ -206,7 +212,7 @@ mod tests {
     }
   }
 
-  describe! cursor_position_calculations {
+  describe! scrolling_and_boundaries {
     before_each {
       let mut state = EditorState::new();
       state.content.insert_line(&2, "line two");
@@ -246,5 +252,48 @@ mod tests {
       assert_eq!(state.cursor_within_line_bounds(), false);
     }
 
+    // TODO: Need to encapsulate logic for getting/setting line number
+    ignore "should calculate the line number correctly" {
+      state.scroll.v_scroll = 20;
+      state.cursor_pos.y = 1;
+      assert_eq!(state.line_number, 22);
+    }
+
   }
+
+  describe! editing_content {
+   
+    before_each {
+      let mut state = EditorState::new();
+      let mut line_two_content = "line two";
+      state.content.insert_line(&2, line_two_content);
+      state.content.insert_line(&3, "line three");
+      state.content.insert_line(&4, "line four");
+    }
+
+    it "should insert a line at the bottom of a document" {
+      let line_content = "test";
+      state.content.insert_line(&5, line_content);
+      assert_eq!(state.content.get_line_by_line_number(&5), line_content);
+    }
+
+    it "should insert a line on in the document, and shift all below lines down one" {
+      let line_content = "test";
+      state.content.insert_line(&2, line_content);
+      assert_eq!(state.content.get_line_by_line_number(&2), line_content);
+      assert_eq!(state.content.get_line_by_line_number(&3), line_two_content);
+    }
+
+    it "should insert a new character at the start of a line" {
+      state.content.insert_char(&'X', &0, &2);
+      assert_eq!(state.content.get_line_by_line_number(&2), "X".to_string() + line_two_content);
+    }
+
+    it "should insert a new character at the end of a line" {
+      state.content.insert_char(&'X', &(line_two_content.len()), &2);
+      assert_eq!(state.content.get_line_by_line_number(&2),  line_two_content.to_string() + "X");
+    }
+
+  }
+
 }
