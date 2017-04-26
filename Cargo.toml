@@ -5,3 +5,6 @@ authors = ["Darren Burns <darrenb900@gmail.com>"]
 
 [dependencies]
 rustbox = "*"
+
+[dev-dependencies]
+stainless = "*"

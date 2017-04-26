@@ -24,6 +24,15 @@ pub struct EditorState {
 
 impl EditorState {
 
+  pub fn new() -> EditorState {
+    EditorState {
+      cursor_pos: Coordinate {x: 0, y: 0},
+      line_number: 1,
+      scroll: Default::default(),
+      content: Default::default(),
+    }
+  }
+
   pub fn inc_cursor_x(&mut self) {
     let new_x = self.cursor_pos.x + 1;
     let new_y = self.cursor_pos.y;

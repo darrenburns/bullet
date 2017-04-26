@@ -19,12 +19,7 @@ fn main() {
     Result::Err(e) => panic!("{}", e)
   };
 
-  let mut state: EditorState = EditorState {
-    cursor_pos: Coordinate {x: 0, y: 0},
-    line_number: 1,
-    scroll: Default::default(),
-    content: Default::default(),
-  };
+  let mut state: EditorState = EditorState::new();
   state.content.lines.push("".to_string());
   editor_view::update_screen(&screen, &state); 
   main_loop(&mut state, &screen);
@@ -44,7 +39,11 @@ fn main_loop(state: &mut EditorState, screen: &RustBox) {
             state.dec_cursor_x();
           }
           Key::Up if state.line_number > 1 => {
+            if (state.cursor_pos.y == 0) {
+              state.scroll.v_scroll -= 1;
+            }
             state.dec_cursor_y();
+
           }
           Key::Down => {
             // Insert a line if required, and go to the start of the line
