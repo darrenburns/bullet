@@ -294,6 +294,11 @@ mod tests {
       assert_eq!(state.content.get_line_by_line_number(&2),  line_two_content.to_string() + "X");
     }
 
+    it "should insert a new character in the middle of a line, shifting characters on the right up an index" {
+      state.content.insert_char(&'X', &(line_two_content.len() / 2), &2);
+      assert_eq!(state.content.get_line_by_line_number(&2),  "lineX two");
+    }
+
   }
 
 }
