@@ -1,6 +1,7 @@
 extern crate rustbox;
 
 use std::fmt;
+use std::cmp;
 
 #[derive(Default, Debug)]
 pub struct Coordinate {
@@ -72,7 +73,7 @@ impl EditorState {
   }
 
   pub fn y_coord_to_line_num(&self) -> usize {
-    self.scroll.v_scroll + self.cursor_pos.y + 1
+    cmp::min(self.scroll.v_scroll + self.cursor_pos.y + 1, self.content.lines.len())
   }
 
   pub fn cursor_to_end_of_line(&mut self, line_number: &usize) {
