@@ -79,11 +79,11 @@ impl EditorState {
 
   pub fn set_cursor_pos(&mut self, new_pos: Coordinate) {
     self.cursor_pos = new_pos;
+    self.line_number = self.y_coord_to_line_num();
   }
 
   pub fn cursor_within_line_bounds(&self) -> bool {
     self.cursor_pos.x < self.content.lines[self.line_number - 1].len()
-        && self.cursor_pos.x > 0
   }
 
   pub fn y_coord_to_line_num(&self) -> usize {
@@ -136,7 +136,6 @@ impl EditorContent {
 }
 
 
-
 #[cfg(test)]
 mod tests {
   pub use super::EditorState;
@@ -187,6 +186,48 @@ mod tests {
       state.inc_cursor_x();
       state.dec_cursor_x();
       assert_eq!(state.cursor_pos.x, 0);
+    }
+
+    ignore "should move cursor to the end of a line when moving down from a longer line" {
+      state.content.insert_line(&2, "aslkfdjlasjdf");
+      state.content.insert_line(&3, "asd");
+      state.inc_cursor_y();
+      state.inc_cursor_y();
+      assert_eq!(state.cursor_pos.x, 3);
+    }
+
+    ignore "should move cursor to the end of a line when moving up from a longer line" {
+      state.content.insert_line(&2, "abcdef");
+      state.content.insert_line(&3, "aasdfasdfasgdfsg");
+      state.inc_cursor_y();
+      state.inc_cursor_y();
+      state.dec_cursor_y();
+      assert_eq!(state.cursor_pos.x, 6);
+    }
+  }
+
+  describe! cursor_position_calculations {
+    before_each {
+      let mut state = EditorState::new();
+      state.content.insert_line(&2, "line two");
+      state.content.insert_line(&3, "line three");
+      state.content.insert_line(&4, "line four");
+    }
+
+    it "should know that the cursor lies within horizontal line boundary" {
+      state.set_cursor_pos(Coordinate {
+        x: 1,
+        y: 2
+      });
+      assert_eq!(state.cursor_within_line_bounds(), true);
+    }
+
+    it "should determine if the cursor lies outwith horizontal line boundary" {
+      state.set_cursor_pos(Coordinate {
+        x: 999,
+        y: 3
+      });
+      assert_eq!(state.cursor_within_line_bounds(), false);
     }
 
   }
