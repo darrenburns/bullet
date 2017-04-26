@@ -1,3 +1,6 @@
+#![feature(plugin)]
+#![cfg_attr(test, plugin(stainless))]
+
 extern crate rustbox;
 
 mod editor_state;
@@ -20,7 +23,6 @@ fn main() {
   };
 
   let mut state: EditorState = EditorState::new();
-  state.content.lines.push("".to_string());
   editor_view::update_screen(&screen, &state); 
   main_loop(&mut state, &screen);
 }

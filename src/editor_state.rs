@@ -3,7 +3,7 @@ extern crate rustbox;
 use std::fmt;
 use std::cmp;
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, PartialEq)]
 pub struct Coordinate {
   pub x: usize, 
   pub y: usize
@@ -29,7 +29,7 @@ impl EditorState {
       cursor_pos: Coordinate {x: 0, y: 0},
       line_number: 1,
       scroll: Default::default(),
-      content: Default::default(),
+      content: EditorContent::new()
     }
   }
 
@@ -56,6 +56,11 @@ impl EditorState {
   pub fn inc_cursor_y(&mut self) {
     let new_x = self.cursor_pos.x;
     let new_y = self.cursor_pos.y + 1;
+
+    if new_y >= self.content.lines.len() {
+      panic!("Attempted to move cursor to non-existent line");
+    }
+
     self.set_cursor_pos(Coordinate {x: new_x, y: new_y});
     self.line_number = self.y_coord_to_line_num();
     self.correct_cursor_line_boundary();
@@ -99,7 +104,7 @@ impl EditorState {
 
 }
 
-#[derive(Default)]
+#[derive(Default, Debug, PartialEq)]
 pub struct EditorScroll {
   pub v_scroll: usize,
   pub h_scroll: usize
@@ -112,6 +117,12 @@ pub struct EditorContent {
 
 impl EditorContent {
 
+  pub fn new() -> EditorContent {
+    EditorContent {
+      lines: vec!["".to_string()]
+    }
+  }
+
   pub fn insert_char(&mut self, ch: &char, x: &usize, line_num: &usize) {
     let mut chars: Vec<char> = self.lines[*line_num-1].chars().collect();
     chars.insert(*x, *ch);
@@ -122,4 +133,61 @@ impl EditorContent {
     self.lines.insert(*line_num - 1, initial_content.to_owned());
   }
 
+}
+
+
+
+#[cfg(test)]
+mod tests {
+  pub use super::EditorState;
+  pub use super::EditorScroll;
+  pub use super::Coordinate;
+
+  describe! cursor_movement {
+
+    before_each {
+      let mut state = EditorState::new();
+    }
+
+    it "should initialise the line number to 1" {
+      assert_eq!(state.line_number, 1);
+    }
+
+    it "should initialise with a single line" {
+      assert_eq!(state.content.lines.len(), 1);
+    }
+
+    it "should initialise with no scrolling" {
+      assert_eq!(state.scroll, EditorScroll{v_scroll:0, h_scroll:0});
+    }
+
+    it "should initialise with the cursor in the top left corner" {
+      assert_eq!(state.cursor_pos, Coordinate{x:0, y:0});
+    }
+
+    it "should initialise with an empty line" {
+      assert_eq!(state.content.lines[0], "");
+    }
+
+    it "should increment the cursor y value if the line below exists" {
+      state.content.insert_line(&2, "");
+      state.inc_cursor_y();
+    }
+
+    failing "should panic when attempting to move to a line that doesnt exist" {
+      state.inc_cursor_y();
+    }
+
+    it "should increment the cursor x value" {
+      state.inc_cursor_x();
+      assert_eq!(state.cursor_pos.x, 1);
+    }
+
+    it "should decrement the cursor x value" {
+      state.inc_cursor_x();
+      state.dec_cursor_x();
+      assert_eq!(state.cursor_pos.x, 0);
+    }
+
+  }
 }

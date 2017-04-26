@@ -1,15 +1,16 @@
-#![feature(plugin)]
-#![cfg_attr(test, plugin(stainless))]
-
-#[cfg(test)]
-mod editor_state_test {
-  
 
 
-  describe! cursor_movement {
-    it "should increment the cursor x value" {
-      
-    }
-  }
 
-}
+
+// pub use editor_state;
+
+// describe! cursor_movement {
+
+//   before_each {
+//     let state = EditorState::new();
+//   }
+
+//   it "should increment the cursor x value" {
+//     assert!(true);
+//   }
+// }
