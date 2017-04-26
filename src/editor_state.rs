@@ -214,12 +214,28 @@ mod tests {
       state.content.insert_line(&4, "line four");
     }
 
+    it "should determine the x=0 is within the line boundary" {
+      state.set_cursor_pos(Coordinate {
+        x: 0,
+        y: 2
+      });
+      assert!(state.cursor_within_line_bounds());
+    }
+
+    it "should determine that the last character on the line is within the line boundary" {
+      state.set_cursor_pos(Coordinate {
+        x: 9,
+        y: 2
+      });
+      assert!(state.cursor_within_line_bounds());
+    }
+
     it "should know that the cursor lies within horizontal line boundary" {
       state.set_cursor_pos(Coordinate {
         x: 1,
         y: 2
       });
-      assert_eq!(state.cursor_within_line_bounds(), true);
+      assert!(state.cursor_within_line_bounds());
     }
 
     it "should determine if the cursor lies outwith horizontal line boundary" {
