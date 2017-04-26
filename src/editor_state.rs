@@ -78,6 +78,7 @@ impl EditorState {
   }
 
   pub fn set_cursor_pos(&mut self, new_pos: Coordinate) {
+    // Coordinate ranges should be validated before calling this
     self.cursor_pos = new_pos;
     self.line_number = self.y_coord_to_line_num();
   }
@@ -97,7 +98,6 @@ impl EditorState {
     };
     self.set_cursor_pos(new_coords);
   }
-
 
 }
 
@@ -226,6 +226,15 @@ mod tests {
         y: 2
       });
       assert!(state.cursor_within_line_bounds());
+    }
+
+    // TODO: Should really move to bottom of screen, not bottom line
+    it "should move cursor to bottom line on attempt to move to non-existent line" {
+      state.set_cursor_pos(Coordinate {
+        x: 0,
+        y: 99999
+      });
+      assert_eq!(state.line_number, 4);
     }
 
     it "should determine that the last character on the line is within the line boundary" {
