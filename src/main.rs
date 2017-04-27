@@ -12,25 +12,21 @@ use std::default::Default;
 use editor_state::EditorState;
 use editor_state::Coordinate;
 
-use rustbox::RustBox;
 use rustbox::Key;
 
 fn main() {
-
-  let screen = match RustBox::init(Default::default()) {
-    Result::Ok(v) => v,
-    Result::Err(e) => panic!("{}", e)
-  };
-
   let mut state: EditorState = EditorState::new();
-  editor_view::update_screen(&screen, &state); 
-  main_loop(&mut state, &screen);
+  main_loop(&mut state);
 }
 
-fn main_loop(state: &mut EditorState, screen: &RustBox) {
+fn main_loop(state: &mut EditorState) {
   loop {
-    match screen.poll_event(false) {
+    editor_view::update_screen(&state);
+    match state.screen.poll_event(false) {
       Ok(rustbox::Event::KeyEvent(key)) => {
+
+        let mut line_number = state.get_current_line_number();
+
         match key {
           Key::Ctrl('q') => { break; }
 
@@ -40,28 +36,17 @@ fn main_loop(state: &mut EditorState, screen: &RustBox) {
           Key::Left if state.cursor_pos.x > 0 => {
             state.dec_cursor_x();
           }
-          Key::Up if state.line_number > 1 => {
-            if (state.cursor_pos.y == 0) {
-              state.scroll.v_scroll -= 1;
-            }
+          Key::Up if line_number > 1 => {
             state.dec_cursor_y();
-
           }
           Key::Down => {
-            // Insert a line if required, and go to the start of the line
-            if state.line_number == state.content.lines.len() {
-              state.content.insert_line(&(state.line_number + 1), "");
+            if line_number == state.content.lines.len() {
+              state.content.insert_line(&(line_number + 1), "");
               state.origin_cursor_x();
-              state.line_number += 1;
-            }
-            if state.cursor_pos.y == screen.height() - 2 {
-              state.scroll.v_scroll += 1;
-            } else {
-              state.inc_cursor_y();
             }
           }
           Key::Char(ch) => {
-            state.content.insert_char(&ch, &state.cursor_pos.x, &state.line_number);
+            state.content.insert_char(&ch, &state.cursor_pos.x, &line_number);
             state.inc_cursor_x();
           }
           _ => {}
@@ -70,7 +55,6 @@ fn main_loop(state: &mut EditorState, screen: &RustBox) {
       Err(e) => panic!("{}", e.description()),
       _ => { }
     }
-    editor_view::update_screen(&screen, &state);
   }
 }
 

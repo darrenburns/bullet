@@ -3,6 +3,8 @@ extern crate rustbox;
 use std::fmt;
 use std::cmp;
 
+use rustbox::RustBox;
+
 #[derive(Default, Debug, PartialEq)]
 pub struct Coordinate {
   pub x: usize, 
@@ -19,17 +21,21 @@ pub struct EditorState {
   pub cursor_pos: Coordinate,
   pub scroll: EditorScroll,
   pub content: EditorContent,
-  pub line_number: usize
+  pub screen: RustBox,
 }
 
 impl EditorState {
 
   pub fn new() -> EditorState {
+    let screen = match RustBox::init(Default::default()) {
+      Result::Ok(v) => v,
+      Result::Err(e) => panic!("{}", e)
+    };
     EditorState {
       cursor_pos: Coordinate {x: 0, y: 0},
-      line_number: 1,
       scroll: Default::default(),
-      content: EditorContent::new()
+      content: EditorContent::new(),
+      screen: screen
     }
   }
 
@@ -48,8 +54,12 @@ impl EditorState {
   pub fn dec_cursor_y(&mut self) {
     let new_x = self.cursor_pos.x;
     let new_y = self.cursor_pos.y - 1;
+
+    if new_y < 0 {
+      panic!("Attempted to move cursor to negative y-index")
+    }
+
     self.set_cursor_pos(Coordinate {x: new_x, y: new_y});
-    self.line_number = self.y_coord_to_line_num();
     self.correct_cursor_line_boundary();
   }
 
@@ -62,13 +72,12 @@ impl EditorState {
     }
 
     self.set_cursor_pos(Coordinate {x: new_x, y: new_y});
-    self.line_number = self.y_coord_to_line_num();
     self.correct_cursor_line_boundary();
   }
 
   fn correct_cursor_line_boundary(&mut self) {
     if !self.cursor_within_line_bounds() {
-      let line_num = self.line_number;
+      let line_num = self.get_current_line_number();
       self.cursor_to_end_of_line(&line_num);
     }
   }
@@ -80,11 +89,14 @@ impl EditorState {
   pub fn set_cursor_pos(&mut self, new_pos: Coordinate) {
     // Coordinate ranges should be validated before calling this
     self.cursor_pos = new_pos;
-    self.line_number = self.y_coord_to_line_num();
   }
 
   pub fn cursor_within_line_bounds(&self) -> bool {
-    self.cursor_pos.x < self.content.lines[self.line_number - 1].len()
+    self.cursor_pos.x <= self.content.lines[self.get_current_line_number() - 1].len()
+  }
+
+  pub fn get_current_line_number(&self) -> usize {
+    self.y_coord_to_line_num()
   }
 
   pub fn y_coord_to_line_num(&self) -> usize {
@@ -150,7 +162,7 @@ mod tests {
     }
 
     it "should initialise the line number to 1" {
-      assert_eq!(state.line_number, 1);
+      assert_eq!(state.get_current_line_number(), 1);
     }
 
     it "should initialise with a single line" {
@@ -234,7 +246,7 @@ mod tests {
         x: 0,
         y: 99999
       });
-      assert_eq!(state.line_number, 4);
+      assert_eq!(state.get_current_line_number(), 4);
     }
 
     it "should determine that the last character on the line is within the line boundary" {
@@ -262,10 +274,10 @@ mod tests {
     }
 
     // TODO: Need to encapsulate logic for getting/setting line number
-    ignore "should calculate the line number correctly" {
-      state.scroll.v_scroll = 20;
+    it "should calculate the line number correctly" {
+      state.scroll.v_scroll = 1;
       state.cursor_pos.y = 1;
-      assert_eq!(state.line_number, 22);
+      assert_eq!(state.get_current_line_number(), 3);
     }
 
   }
