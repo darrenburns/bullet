@@ -1,125 +1,88 @@
-extern crate rustbox;
-
-use std::fmt;
-use std::cmp;
-
-use rustbox::RustBox;
-
-#[derive(Default, Debug, PartialEq)]
-pub struct Coordinate {
-  pub x: usize, 
-  pub y: usize
+#[derive(Clone)]
+pub struct CursorPosition {
+  pub active_line: usize,
+  pub active_col: usize
 }
 
-impl fmt::Display for Coordinate {
-  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-    write!(f, "x {}, y {}", self.x, self.y)
-  }
-}
-
+#[derive(Clone)]
 pub struct EditorState {
-  pub cursor_pos: Coordinate,
-  pub scroll: EditorScroll,
   pub content: EditorContent,
-  pub screen: RustBox,
+  pub position: CursorPosition
 }
 
 impl EditorState {
 
   pub fn new() -> EditorState {
-    let screen = match RustBox::init(Default::default()) {
-      Result::Ok(v) => v,
-      Result::Err(e) => panic!("{}", e)
-    };
     EditorState {
-      cursor_pos: Coordinate {x: 0, y: 0},
-      scroll: Default::default(),
       content: EditorContent::new(),
-      screen: screen
+      position: CursorPosition {active_line: 1, active_col: 1}
     }
   }
 
-  pub fn inc_cursor_x(&mut self) {
-    let new_x = self.cursor_pos.x + 1;
-    let new_y = self.cursor_pos.y;
-    self.set_cursor_pos(Coordinate {x: new_x, y: new_y});
+  pub fn cursor_mv_right(&mut self) {
+    let new_col = self.position.active_col + 1;
+    let new_row = self.position.active_line;
+    self.set_position(CursorPosition {active_col: new_col, active_line: new_row});
   }
 
-  pub fn dec_cursor_x(&mut self) {
-    let new_x = self.cursor_pos.x - 1;
-    let new_y = self.cursor_pos.y;
-    self.set_cursor_pos(Coordinate {x: new_x, y: new_y});
+  pub fn cursor_mv_left(&mut self) {
+    let new_col = self.position.active_col - 1;
+    let new_row = self.position.active_line;
+    self.set_position(CursorPosition {active_col: new_col, active_line: new_row});
   }
 
-  pub fn dec_cursor_y(&mut self) {
-    let new_x = self.cursor_pos.x;
-    let new_y = self.cursor_pos.y - 1;
+  pub fn cursor_mv_up(&mut self) {
+    let new_col = self.position.active_col;
+    let new_row = self.position.active_line - 1;
 
-    if new_y < 0 {
-      panic!("Attempted to move cursor to negative y-index")
+    if new_row < 1 {
+      panic!("Attempted to move cursor to non-positive row")
     }
 
-    self.set_cursor_pos(Coordinate {x: new_x, y: new_y});
-    self.correct_cursor_line_boundary();
-  }
-
-  pub fn inc_cursor_y(&mut self) {
-    let new_x = self.cursor_pos.x;
-    let new_y = self.cursor_pos.y + 1;
-
-    if new_y >= self.content.lines.len() {
-      panic!("Attempted to move cursor to non-existent line");
-    }
-
-    self.set_cursor_pos(Coordinate {x: new_x, y: new_y});
+    self.set_position(CursorPosition {active_col: new_col, active_line: new_row});
     self.correct_cursor_line_boundary();
   }
 
   fn correct_cursor_line_boundary(&mut self) {
+    let mut line_num = self.position.active_line;
     if !self.cursor_within_line_bounds() {
-      let line_num = self.get_current_line_number();
       self.cursor_to_end_of_line(&line_num);
     }
   }
 
   pub fn origin_cursor_x(&mut self) {
-    self.cursor_pos.x = 0;
+    self.position.active_col = 1;
   }
 
-  pub fn set_cursor_pos(&mut self, new_pos: Coordinate) {
+  pub fn set_position(&mut self, new_pos: CursorPosition) {
     // Coordinate ranges should be validated before calling this
-    self.cursor_pos = new_pos;
+    self.position = new_pos;
   }
 
   pub fn cursor_within_line_bounds(&self) -> bool {
-    self.cursor_pos.x <= self.content.lines[self.get_current_line_number() - 1].len()
+    let current_line_len = self.get_line_by_line_number(&self.position.active_line).len();
+    self.position.active_col <= current_line_len
   }
 
-  pub fn get_current_line_number(&self) -> usize {
-    self.y_coord_to_line_num()
-  }
-
-  pub fn y_coord_to_line_num(&self) -> usize {
-    cmp::min(self.scroll.v_scroll + self.cursor_pos.y + 1, self.content.lines.len())
+  pub fn get_line_by_line_number(&self, line_num: &usize) -> &str {
+    &self.content.lines[line_num - 1]
   }
 
   pub fn cursor_to_end_of_line(&mut self, line_number: &usize) {
-    let new_coords = Coordinate {
-      x: self.content.get_line_by_line_number(line_number).len(),
-      y: *line_number - 1
+    let new_position = CursorPosition {
+      active_col: self.content.get_line_by_line_number(line_number).len(),
+      active_line: *line_number
     };
-    self.set_cursor_pos(new_coords);
+    self.set_position(new_position);
+  }
+
+  pub fn get_current_line_number(&self) -> usize {
+    self.position.active_line
   }
 
 }
 
-#[derive(Default, Debug, PartialEq)]
-pub struct EditorScroll {
-  pub v_scroll: usize,
-  pub h_scroll: usize
-}
-
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct EditorContent {
   pub lines: Vec<String>
 }
@@ -152,13 +115,15 @@ impl EditorContent {
 #[cfg(test)]
 mod tests {
   pub use super::EditorState;
-  pub use super::EditorScroll;
-  pub use super::Coordinate;
 
   describe! cursor_movement {
 
     before_each {
       let mut state = EditorState::new();
+      let line_two_content = "line two";
+      state.content.insert_line(&2, line_two_content);
+      state.content.insert_line(&3, "line three");
+      state.content.insert_line(&4, "line four");
     }
 
     it "should initialise the line number to 1" {
@@ -166,130 +131,8 @@ mod tests {
     }
 
     it "should initialise with a single line" {
-      assert_eq!(state.content.lines.len(), 1);
-    }
-
-    it "should initialise with no scrolling" {
-      assert_eq!(state.scroll, EditorScroll{v_scroll:0, h_scroll:0});
-    }
-
-    it "should initialise with the cursor in the top left corner" {
-      assert_eq!(state.cursor_pos, Coordinate{x:0, y:0});
-    }
-
-    it "should initialise with an empty line" {
-      assert_eq!(state.content.lines[0], "");
-    }
-
-    it "should increment the cursor y value if the line below exists" {
-      state.content.insert_line(&2, "");
-      state.inc_cursor_y();
-    }
-
-    failing "should panic when attempting to move to a line that doesnt exist" {
-      state.inc_cursor_y();
-    }
-
-    it "should increment the cursor x value" {
-      state.inc_cursor_x();
-      assert_eq!(state.cursor_pos.x, 1);
-    }
-
-    it "should decrement the cursor x value" {
-      state.inc_cursor_x();
-      state.dec_cursor_x();
-      assert_eq!(state.cursor_pos.x, 0);
-    }
-
-    it "should be able to set the cursor to x=0 for the current line" {
-      state.origin_cursor_x();
-      assert_eq!(state.cursor_pos.x, 0);
-    }
-
-    ignore "should move cursor to the end of a line when moving down from a longer line" {
-      state.content.insert_line(&2, "aslkfdjlasjdf");
-      state.content.insert_line(&3, "asd");
-      state.inc_cursor_y();
-      state.inc_cursor_y();
-      assert_eq!(state.cursor_pos.x, 3);
-    }
-
-    ignore "should move cursor to the end of a line when moving up from a longer line" {
-      state.content.insert_line(&2, "abcdef");
-      state.content.insert_line(&3, "aasdfasdfasgdfsg");
-      state.inc_cursor_y();
-      state.inc_cursor_y();
-      state.dec_cursor_y();
-      assert_eq!(state.cursor_pos.x, 6);
-    }
-  }
-
-  describe! scrolling_and_boundaries {
-    before_each {
-      let mut state = EditorState::new();
-      state.content.insert_line(&2, "line two");
-      state.content.insert_line(&3, "line three");
-      state.content.insert_line(&4, "line four");
-    }
-
-    it "should determine the x=0 is within the line boundary" {
-      state.set_cursor_pos(Coordinate {
-        x: 0,
-        y: 2
-      });
-      assert!(state.cursor_within_line_bounds());
-    }
-
-    // TODO: Should really move to bottom of screen, not bottom line
-    it "should move cursor to bottom line on attempt to move to non-existent line" {
-      state.set_cursor_pos(Coordinate {
-        x: 0,
-        y: 99999
-      });
-      assert_eq!(state.get_current_line_number(), 4);
-    }
-
-    it "should determine that the last character on the line is within the line boundary" {
-      state.set_cursor_pos(Coordinate {
-        x: 9,
-        y: 2
-      });
-      assert!(state.cursor_within_line_bounds());
-    }
-
-    it "should know that the cursor lies within horizontal line boundary" {
-      state.set_cursor_pos(Coordinate {
-        x: 1,
-        y: 2
-      });
-      assert!(state.cursor_within_line_bounds());
-    }
-
-    it "should determine if the cursor lies outwith horizontal line boundary" {
-      state.set_cursor_pos(Coordinate {
-        x: 999,
-        y: 3
-      });
-      assert_eq!(state.cursor_within_line_bounds(), false);
-    }
-
-    // TODO: Need to encapsulate logic for getting/setting line number
-    it "should calculate the line number correctly" {
-      state.scroll.v_scroll = 1;
-      state.cursor_pos.y = 1;
-      assert_eq!(state.get_current_line_number(), 3);
-    }
-
-  }
-
-  describe! editing_content {
-   
-    before_each {
-      let mut state = EditorState::new();
-      let mut line_two_content = "line two";
-      state.content.insert_line(&2, line_two_content);
-      state.content.insert_line(&3, "line three");
-      state.content.insert_line(&4, "line four");
+      let some_state = EditorState::new();
+      assert_eq!(some_state.content.lines.len(), 1);
     }
 
     it "should insert a line at the bottom of a document" {

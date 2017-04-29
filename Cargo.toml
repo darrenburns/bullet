@@ -5,6 +5,7 @@ authors = ["Darren Burns <darrenb900@gmail.com>"]
 
 [dependencies]
 rustbox = "*"
+termbox-sys = "0.2.9"
 
 [dev-dependencies]
 stainless = "*"
