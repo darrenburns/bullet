@@ -45,9 +45,9 @@ fn main_loop(mut state: EditorState, mut view: ViewState) {
           Key::Right => {
             bullet_api.cursor_right();
           }
-          // Key::Left if state.cursor_pos.x > 0 => {
-          //   state.dec_cursor_x();
-          // }
+          Key::Left => {
+            bullet_api.cursor_left();
+          }
           // Key::Up if line_number > 1 => {
           //   state.dec_cursor_y();
           // }

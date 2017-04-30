@@ -27,6 +27,15 @@ impl<'a> BulletApi<'a> {
                 })
   }
 
+  pub fn cursor_left(&mut self) -> Result<CursorPosition, CursorBounds> {
+    self.model.cursor_mv_left()
+          .map(|new_pos| {
+            self.view.as_mut()
+                      .map(|mut view| view.cursor_mv_left());
+            new_pos
+          })
+  }
+
   pub fn get_number_of_lines(&self) -> usize {
     self.model.content.lines.len()
   }
