@@ -101,6 +101,10 @@ impl ViewState {
     }
   }
 
+  pub fn cursor_origin_x(&mut self) {
+    self.cursor_coords.x = 0;
+  }
+
   pub fn cursor_mv_down(&mut self) {
     if self.cursor_coords.y < self.screen.height() - INFO_BAR_HEIGHT {
       self.cursor_coords.inc_y();

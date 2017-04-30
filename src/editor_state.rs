@@ -64,8 +64,12 @@ impl EditorState {
     }
   }
 
-  pub fn origin_cursor_x(&mut self) {
+  pub fn cursor_origin_x(&mut self) -> Result<CursorPosition, CursorBounds> {
     self.position.active_col = 1;
+    Ok(CursorPosition {
+      active_col: 1,
+      ..self.position
+    })
   }
 
   pub fn set_position(&mut self, new_pos: CursorPosition) -> Result<CursorPosition, CursorBounds> {

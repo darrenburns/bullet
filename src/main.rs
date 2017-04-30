@@ -62,6 +62,11 @@ fn main_loop(mut state: EditorState, mut view: ViewState) {
             bullet_api.insert_char(&ch, &line_number, &col);
             bullet_api.cursor_right();
           }
+          Key::Enter => {
+            bullet_api.insert_line_below();
+            bullet_api.cursor_down();
+            bullet_api.cursor_origin_x();
+          }
           _ => {}
         }
       },

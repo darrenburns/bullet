@@ -1,9 +1,3 @@
-// This module should provide a high level API for interacting with the editor
-// rather than the lower level functionality currently available via EditorState
-
-/// Moves the cursor to the next line, creating it if it doesn't already exist.
-/// Returns the newly active line.
-
 use editor_view::ViewState;
 use editor_state::{EditorState, CursorPosition, CursorBounds};
 
@@ -13,10 +7,6 @@ pub struct BulletApi<'a> {
 }
 
 impl<'a> BulletApi<'a> {
-
-  pub fn insert_char(&mut self, ch: &char, row: &usize, col: &usize) {
-    self.model.content.insert_char(&ch, &col, &row);
-  }
 
   pub fn cursor_right(&mut self) -> Result<CursorPosition, CursorBounds> {
     self.cursor_move(EditorState::cursor_mv_right, ViewState::cursor_mv_right)
@@ -34,15 +24,30 @@ impl<'a> BulletApi<'a> {
     self.cursor_move(EditorState::cursor_mv_up, ViewState::cursor_mv_up)
   }
 
+  pub fn cursor_origin_x(&mut self) -> Result<CursorPosition, CursorBounds> {
+    self.cursor_move(EditorState::cursor_origin_x, ViewState::cursor_origin_x)
+  }
+
   fn cursor_move<F, G>(&mut self, state_fn: F, view_fn: G) -> Result<CursorPosition, CursorBounds> 
     where F: Fn(&mut EditorState) -> Result<CursorPosition, CursorBounds>,
           G: Fn(&mut ViewState) -> () {
-    state_fn(self.model)
-          .map(|new_pos| {
-            self.view.as_mut()
-                      .map(|view| view_fn(view));
-            new_pos
-          })
+    state_fn(self.model).map(|new_pos| {
+      self.view.as_mut().map(|view| view_fn(view));
+      new_pos
+    })
+  }
+
+  pub fn insert_char(&mut self, ch: &char, row: &usize, col: &usize) {
+    self.model.content.insert_char(&ch, &col, &row);
+  }
+
+  pub fn insert_line_below(&mut self) {
+    let current_line_number = self.get_current_line_number();
+    self.model.content.insert_line(&(current_line_number + 1), "");
+  }
+
+  pub fn get_current_line_number(&self) -> usize {
+    self.model.position.active_line
   }
 
   pub fn get_number_of_lines(&self) -> usize {
