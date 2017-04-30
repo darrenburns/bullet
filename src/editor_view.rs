@@ -106,7 +106,7 @@ impl ViewState {
   }
 
   pub fn cursor_mv_down(&mut self) {
-    if self.cursor_coords.y < self.screen.height() - INFO_BAR_HEIGHT {
+    if self.cursor_coords.y < self.screen.height() - INFO_BAR_HEIGHT - 1 {
       self.cursor_coords.inc_y();
     } else {
       self.scroll.scroll_down();
