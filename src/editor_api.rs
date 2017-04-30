@@ -26,6 +26,14 @@ impl<'a> BulletApi<'a> {
     self.cursor_move(EditorState::cursor_mv_left, ViewState::cursor_mv_left)
   }
 
+  pub fn cursor_down(&mut self) -> Result<CursorPosition, CursorBounds> {
+    self.cursor_move(EditorState::cursor_mv_down, ViewState::cursor_mv_down)
+  }
+
+  pub fn cursor_up(&mut self) -> Result<CursorPosition, CursorBounds> {
+    self.cursor_move(EditorState::cursor_mv_up, ViewState::cursor_mv_up)
+  }
+
   fn cursor_move<F, G>(&mut self, state_fn: F, view_fn: G) -> Result<CursorPosition, CursorBounds> 
     where F: Fn(&mut EditorState) -> Result<CursorPosition, CursorBounds>,
           G: Fn(&mut ViewState) -> () {
@@ -35,8 +43,6 @@ impl<'a> BulletApi<'a> {
                       .map(|view| view_fn(view));
             new_pos
           })
-    
-
   }
 
   pub fn get_number_of_lines(&self) -> usize {

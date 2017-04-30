@@ -39,16 +39,22 @@ impl EditorState {
     })
   }
 
-  pub fn cursor_mv_up(&mut self) {
+  pub fn cursor_mv_up(&mut self) -> Result<CursorPosition, CursorBounds> {
     let new_col = self.position.active_col;
     let new_row = self.position.active_line - 1;
+    self.set_position(CursorPosition {
+      active_col: new_col, 
+      active_line: new_row
+    })
+  }
 
-    if new_row < 1 {
-      panic!("Attempted to move cursor to non-positive row")
-    }
-
-    self.set_position(CursorPosition {active_col: new_col, active_line: new_row});
-    self.correct_cursor_line_boundary();
+  pub fn cursor_mv_down(&mut self) -> Result<CursorPosition, CursorBounds> {
+    let new_col = self.position.active_col;
+    let new_row = self.position.active_line + 1;
+    self.set_position(CursorPosition {
+      active_col: new_col, 
+      active_line: new_row
+    })
   }
 
   fn correct_cursor_line_boundary(&mut self) {
