@@ -2,6 +2,7 @@
 #![cfg_attr(test, plugin(stainless))]
 
 extern crate rustbox;
+#[macro_use] extern crate quick_error;
 
 mod editor_state;
 mod editor_view;
@@ -56,10 +57,11 @@ fn main_loop(mut state: EditorState, mut view: ViewState) {
           //     state.origin_cursor_x();
           //   }
           // }
-          // Key::Char(ch) => {
-          //   state.content.insert_char(&ch, &state.cursor_pos.x, &line_number);
-          //   state.inc_cursor_x();
-          // }
+          Key::Char(ch) => {
+            let col = bullet_api.model.position.active_col;
+            bullet_api.insert_char(&ch, &line_number, &col);
+            bullet_api.cursor_right();
+          }
           _ => {}
         }
       },

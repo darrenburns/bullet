@@ -5,7 +5,7 @@
 /// Returns the newly active line.
 
 use editor_view::ViewState;
-use editor_state::EditorState;
+use editor_state::{EditorState, CursorPosition, CursorBounds};
 
 pub struct BulletApi<'a> {
   pub view: &'a mut Option<ViewState>,
@@ -13,10 +13,18 @@ pub struct BulletApi<'a> {
 }
 
 impl<'a> BulletApi<'a> {
-  pub fn cursor_right(&mut self) -> usize {
-      self.model.cursor_mv_right();
-      self.view.as_mut().and_then(|mut view| Some(view.cursor_mv_right()));
-      1
+
+  pub fn insert_char(&mut self, ch: &char, row: &usize, col: &usize) {
+    self.model.content.insert_char(&ch, &col, &row);
+  }
+
+  pub fn cursor_right(&mut self) -> Result<CursorPosition, CursorBounds> {
+      self.model.cursor_mv_right()
+                .map(|new_pos| {
+                  self.view.as_mut()
+                           .map(|mut view| view.cursor_mv_right());
+                  new_pos
+                })
   }
 
   pub fn get_number_of_lines(&self) -> usize {

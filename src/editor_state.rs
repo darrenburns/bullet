@@ -1,3 +1,5 @@
+
+
 #[derive(Clone)]
 pub struct CursorPosition {
   pub active_line: usize,
@@ -19,16 +21,22 @@ impl EditorState {
     }
   }
 
-  pub fn cursor_mv_right(&mut self) {
+  pub fn cursor_mv_right(&mut self) -> Result<CursorPosition, CursorBounds> {
     let new_col = self.position.active_col + 1;
     let new_row = self.position.active_line;
-    self.set_position(CursorPosition {active_col: new_col, active_line: new_row});
+    self.set_position(CursorPosition {
+      active_col: new_col, 
+      active_line: new_row
+    })
   }
 
-  pub fn cursor_mv_left(&mut self) {
+  pub fn cursor_mv_left(&mut self) -> Result<CursorPosition, CursorBounds> {
     let new_col = self.position.active_col - 1;
     let new_row = self.position.active_line;
-    self.set_position(CursorPosition {active_col: new_col, active_line: new_row});
+    self.set_position(CursorPosition {
+      active_col: new_col, 
+      active_line: new_row
+    })
   }
 
   pub fn cursor_mv_up(&mut self) {
@@ -54,9 +62,15 @@ impl EditorState {
     self.position.active_col = 1;
   }
 
-  pub fn set_position(&mut self, new_pos: CursorPosition) {
-    // Coordinate ranges should be validated before calling this
-    self.position = new_pos;
+  pub fn set_position(&mut self, new_pos: CursorPosition) -> Result<CursorPosition, CursorBounds> {
+    if new_pos.active_col < 1 || new_pos.active_col > self.get_current_line().len() + 1{
+      return Err(CursorBounds::ColumnOutOfBounds(""));
+    }
+    if new_pos.active_line < 1 || new_pos.active_line > self.content.lines.len() + 1 {
+      return Err(CursorBounds::RowOutOfBounds(""));
+    }
+    self.position = new_pos.clone();
+    Ok(new_pos)
   }
 
   pub fn cursor_within_line_bounds(&self) -> bool {
@@ -69,15 +83,19 @@ impl EditorState {
   }
 
   pub fn cursor_to_end_of_line(&mut self, line_number: &usize) {
-    let new_position = CursorPosition {
-      active_col: self.content.get_line_by_line_number(line_number).len(),
+    let new_col = self.content.get_line_by_line_number(line_number).len();
+    self.set_position(CursorPosition {
+      active_col: new_col,
       active_line: *line_number
-    };
-    self.set_position(new_position);
+    });
   }
 
   pub fn get_current_line_number(&self) -> usize {
     self.position.active_line
+  }
+
+  pub fn get_current_line(&self) -> &str {
+    self.content.get_line_by_line_number(&self.get_current_line_number())
   }
 
 }
@@ -95,18 +113,18 @@ impl EditorContent {
     }
   }
 
-  pub fn insert_char(&mut self, ch: &char, x: &usize, line_num: &usize) {
-    let mut chars: Vec<char> = self.lines[*line_num-1].chars().collect();
-    chars.insert(*x, *ch);
-    self.lines[*line_num-1] = chars.into_iter().collect::<String>();
+  pub fn insert_char(&mut self, ch: &char, col: &usize, line_num: &usize) {
+    let mut chars: Vec<char> = self.lines[line_num-1].chars().collect();
+    chars.insert(col-1, *ch);
+    self.lines[line_num-1] = chars.into_iter().collect::<String>();
   }
 
   pub fn insert_line(&mut self, line_num: &usize, initial_content: &str) {
-    self.lines.insert(*line_num - 1, initial_content.to_owned());
+    self.lines.insert(line_num - 1, initial_content.to_owned());
   }
 
-  pub fn get_line_by_line_number(&mut self, line_number: &usize) -> &str {
-    &self.lines[*line_number - 1]
+  pub fn get_line_by_line_number(&self, line_number: &usize) -> &str {
+    &self.lines[line_number - 1]
   }
 
 }
@@ -166,3 +184,20 @@ mod tests {
   }
 
 }
+
+
+quick_error! {
+  #[derive(Debug)]
+  pub enum CursorBounds {
+    RowOutOfBounds(descr: &'static str) {
+      description(descr)
+    }
+
+    ColumnOutOfBounds(descr: &'static str) {
+      description(descr)
+    }
+  }
+}
+
+
+
