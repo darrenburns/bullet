@@ -28,13 +28,22 @@ impl<'a> BulletApi<'a> {
     self.cursor_move(EditorState::cursor_origin_x, ViewState::cursor_origin_x)
   }
 
+  pub fn cursor_to_end_of_line(&mut self) -> Result<CursorPosition, CursorBounds> {
+    let current_line_len = self.get_current_line().len();
+    let new_pos = self.model.cursor_to_end_of_line();
+    self.view.as_mut().unwrap().cursor_set_x(current_line_len);
+    new_pos
+  }
+
   fn cursor_move<F, G>(&mut self, state_fn: F, view_fn: G) -> Result<CursorPosition, CursorBounds> 
     where F: Fn(&mut EditorState) -> Result<CursorPosition, CursorBounds>,
           G: Fn(&mut ViewState) -> () {
-    state_fn(self.model).map(|new_pos| {
-      self.view.as_mut().map(|view| view_fn(view));
-      new_pos
-    })
+    state_fn(self.model)
+      .map(|new_pos| {
+        self.view.as_mut().map(|view| view_fn(view));
+        new_pos
+      })
+      .or_else(|err| self.cursor_to_end_of_line())
   }
 
   pub fn insert_char(&mut self, ch: &char, row: &usize, col: &usize) {
@@ -44,6 +53,10 @@ impl<'a> BulletApi<'a> {
   pub fn insert_line_below(&mut self) {
     let current_line_number = self.get_current_line_number();
     self.model.content.insert_line(&(current_line_number + 1), "");
+  }
+
+  pub fn get_current_line(&self) -> &str {
+    self.model.get_current_line()
   }
 
   pub fn get_current_line_number(&self) -> usize {

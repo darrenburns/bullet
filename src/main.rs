@@ -48,15 +48,12 @@ fn main_loop(mut state: EditorState, mut view: ViewState) {
           Key::Left => {
             bullet_api.cursor_left();
           }
-          // Key::Up if line_number > 1 => {
-          //   state.dec_cursor_y();
-          // }
-          // Key::Down => {
-          //   if line_number == state.content.lines.len() {
-          //     state.content.insert_line(&(line_number + 1), "");
-          //     state.origin_cursor_x();
-          //   }
-          // }
+          Key::Up if line_number > 1 => {
+            bullet_api.cursor_up();
+          }
+          Key::Down => {
+            bullet_api.cursor_down();
+          }
           Key::Char(ch) => {
             let col = bullet_api.model.position.active_col;
             bullet_api.insert_char(&ch, &line_number, &col);

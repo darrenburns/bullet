@@ -101,10 +101,6 @@ impl ViewState {
     }
   }
 
-  pub fn cursor_origin_x(&mut self) {
-    self.cursor_coords.x = 0;
-  }
-
   pub fn cursor_mv_down(&mut self) {
     if self.cursor_coords.y < self.screen.height() - INFO_BAR_HEIGHT - 1 {
       self.cursor_coords.inc_y();
@@ -112,6 +108,15 @@ impl ViewState {
       self.scroll.scroll_down();
     }
   }
+
+  pub fn cursor_origin_x(&mut self) {
+    self.cursor_coords.x = 0;
+  }
+
+  pub fn cursor_set_x(&mut self, x: usize) {
+    self.cursor_coords.x = x;
+  }
+
 
   pub fn repaint(&mut self, latest_state: &EditorState) {
     self.screen.clear();
@@ -132,19 +137,7 @@ impl ViewState {
   }
 
   fn render_info_bar(&mut self, editor_state: &EditorState) {
-    let left_text = "Ctrl + Q to quit.";
-    let file_name = "SomeFile.md";
-    let cursor_coords_string = self.cursor_coords.to_string();
-    let line_num = editor_state.position.active_line;
-    let info_text = format!("{0}{1} vscroll:{3}, sheight: {4} line_num: {5} num_lines: {6} {2: >7$}", 
-      left_text, 
-      cursor_coords_string, 
-      file_name,
-      self.scroll.v_scroll,
-      self.screen.height(),
-      line_num,
-      editor_state.content.lines.len(),
-      self.screen.width() - left_text.len() - cursor_coords_string.len());
+    let info_text = format!("{0:?}", editor_state);
     self.screen.print(0, self.screen.height() - INFO_BAR_HEIGHT, rustbox::RB_BOLD, Color::Black, Color::White, &info_text);
   }
 

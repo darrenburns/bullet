@@ -1,12 +1,12 @@
 
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct CursorPosition {
   pub active_line: usize,
   pub active_col: usize
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct EditorState {
   pub content: EditorContent,
   pub position: CursorPosition
@@ -25,7 +25,7 @@ impl EditorState {
     let new_col = self.position.active_col + 1;
     let new_row = self.position.active_line;
     self.set_position(CursorPosition {
-      active_col: new_col, 
+      active_col: new_col,
       active_line: new_row
     })
   }
@@ -34,7 +34,7 @@ impl EditorState {
     let new_col = self.position.active_col - 1;
     let new_row = self.position.active_line;
     self.set_position(CursorPosition {
-      active_col: new_col, 
+      active_col: new_col,
       active_line: new_row
     })
   }
@@ -43,7 +43,7 @@ impl EditorState {
     let new_col = self.position.active_col;
     let new_row = self.position.active_line - 1;
     self.set_position(CursorPosition {
-      active_col: new_col, 
+      active_col: new_col,
       active_line: new_row
     })
   }
@@ -52,31 +52,33 @@ impl EditorState {
     let new_col = self.position.active_col;
     let new_row = self.position.active_line + 1;
     self.set_position(CursorPosition {
-      active_col: new_col, 
+      active_col: new_col,
       active_line: new_row
     })
   }
 
-  fn correct_cursor_line_boundary(&mut self) {
-    let mut line_num = self.position.active_line;
-    if !self.cursor_within_line_bounds() {
-      self.cursor_to_end_of_line(&line_num);
-    }
+  pub fn cursor_origin_x(&mut self) -> Result<CursorPosition, CursorBounds> {
+    let active_line = self.position.active_line;
+    self.set_position(CursorPosition {
+      active_col: 1,
+      active_line
+    })
   }
 
-  pub fn cursor_origin_x(&mut self) -> Result<CursorPosition, CursorBounds> {
-    self.position.active_col = 1;
-    Ok(CursorPosition {
-      active_col: 1,
-      ..self.position
+  pub fn cursor_to_end_of_line(&mut self) -> Result<CursorPosition, CursorBounds> {
+    let new_col = self.get_current_line().len();
+    let active_line = self.position.active_line;
+    self.set_position(CursorPosition {
+      active_col: new_col,
+      active_line
     })
   }
 
   pub fn set_position(&mut self, new_pos: CursorPosition) -> Result<CursorPosition, CursorBounds> {
-    if new_pos.active_col < 1 || new_pos.active_col > self.get_current_line().len() + 1{
+    if new_pos.active_col < 1 || new_pos.active_col > self.get_line_by_line_number(&new_pos.active_line).len() + 1 {
       return Err(CursorBounds::ColumnOutOfBounds(""));
     }
-    if new_pos.active_line < 1 || new_pos.active_line > self.content.lines.len() + 1 {
+    if new_pos.active_line < 1 || new_pos.active_line > self.content.lines.len() {
       return Err(CursorBounds::RowOutOfBounds(""));
     }
     self.position = new_pos.clone();
@@ -90,14 +92,6 @@ impl EditorState {
 
   pub fn get_line_by_line_number(&self, line_num: &usize) -> &str {
     &self.content.lines[line_num - 1]
-  }
-
-  pub fn cursor_to_end_of_line(&mut self, line_number: &usize) {
-    let new_col = self.content.get_line_by_line_number(line_number).len();
-    self.set_position(CursorPosition {
-      active_col: new_col,
-      active_line: *line_number
-    });
   }
 
   pub fn get_current_line_number(&self) -> usize {
