@@ -31,12 +31,12 @@ impl Coordinate {
     self.y -= 1;
   }
 
-  pub fn set_x(&mut self) {
-    self.x = 0;
+  pub fn set_x(&mut self, x: usize) {
+    self.x = x;
   }
 
-  pub fn set_y(&mut self) {
-    self.y = 0;
+  pub fn set_y(&mut self, y: usize) {
+    self.y = y;
   }
 }
 
@@ -109,12 +109,14 @@ impl ViewState {
     }
   }
 
-  pub fn cursor_origin_x(&mut self) {
-    self.cursor_coords.x = 0;
+  pub fn set_cursor_x(&mut self, cursor_x: usize) {
+    if cursor_x <= self.screen.width() {
+      self.cursor_coords.set_x(cursor_x);
+    }
   }
 
-  pub fn cursor_set_x(&mut self, x: usize) {
-    self.cursor_coords.x = x;
+  pub fn cursor_origin_x(&mut self) {
+    self.cursor_coords.x = 0;
   }
 
 
@@ -122,7 +124,7 @@ impl ViewState {
     self.screen.clear();
     self.render_info_bar(&latest_state);
     self.render_lines(&latest_state.content.lines);
-    self.screen.set_cursor(self.cursor_coords.x as isize, self.cursor_coords.y as isize);
+    self.screen.set_cursor((latest_state.position.active_col - 1) as isize, (latest_state.position.active_line - 1) as isize);
     self.screen.present();
   }
 

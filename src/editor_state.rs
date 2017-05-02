@@ -66,7 +66,7 @@ impl EditorState {
   }
 
   pub fn cursor_to_end_of_line(&mut self) -> Result<CursorPosition, CursorBounds> {
-    let new_col = self.get_current_line().len();
+    let new_col = self.get_current_line().len() + 1;
     let active_line = self.position.active_line;
     self.set_position(CursorPosition {
       active_col: new_col,
@@ -75,11 +75,12 @@ impl EditorState {
   }
 
   pub fn set_position(&mut self, new_pos: CursorPosition) -> Result<CursorPosition, CursorBounds> {
-    if new_pos.active_col < 1 || new_pos.active_col > self.get_line_by_line_number(&new_pos.active_line).len() + 1 {
-      return Err(CursorBounds::ColumnOutOfBounds(""));
-    }
     if new_pos.active_line < 1 || new_pos.active_line > self.content.lines.len() {
       return Err(CursorBounds::RowOutOfBounds(""));
+    }
+    let line_len = self.get_line_by_line_number(&new_pos.active_line).len();
+    if new_pos.active_col < 1 || new_pos.active_col > line_len + 1 {
+      return Err(CursorBounds::ColumnOutOfBounds(""));
     }
     self.position = new_pos.clone();
     Ok(new_pos)
@@ -202,6 +203,3 @@ quick_error! {
     }
   }
 }
-
-
-

@@ -9,41 +9,51 @@ pub struct BulletApi<'a> {
 impl<'a> BulletApi<'a> {
 
   pub fn cursor_right(&mut self) -> Result<CursorPosition, CursorBounds> {
-    self.cursor_move(EditorState::cursor_mv_right, ViewState::cursor_mv_right)
+    self.cursor_move(EditorState::cursor_mv_right)
   }
 
   pub fn cursor_left(&mut self) -> Result<CursorPosition, CursorBounds> {
-    self.cursor_move(EditorState::cursor_mv_left, ViewState::cursor_mv_left)
+    self.cursor_move(EditorState::cursor_mv_left)
   }
 
   pub fn cursor_down(&mut self) -> Result<CursorPosition, CursorBounds> {
-    self.cursor_move(EditorState::cursor_mv_down, ViewState::cursor_mv_down)
+    let line_below = self.get_current_line_number() + 1;
+    self.cursor_move(EditorState::cursor_mv_down)
+        .or_else(|err| {
+          match err {
+              CursorBounds::RowOutOfBounds(_) => { 
+                self.cursor_to_end_of_current_line()
+              },
+              CursorBounds::ColumnOutOfBounds(_) => {
+                self.cursor_to_end_of_line(&line_below)
+              },
+          }
+        })
   }
 
   pub fn cursor_up(&mut self) -> Result<CursorPosition, CursorBounds> {
-    self.cursor_move(EditorState::cursor_mv_up, ViewState::cursor_mv_up)
+    self.cursor_move(EditorState::cursor_mv_up)
   }
 
   pub fn cursor_origin_x(&mut self) -> Result<CursorPosition, CursorBounds> {
-    self.cursor_move(EditorState::cursor_origin_x, ViewState::cursor_origin_x)
+    self.cursor_move(EditorState::cursor_origin_x)
   }
 
-  pub fn cursor_to_end_of_line(&mut self) -> Result<CursorPosition, CursorBounds> {
+  fn cursor_to_end_of_line(&mut self, new_line: &usize) -> Result<CursorPosition, CursorBounds> {
+    let new_line_len = self.get_current_line().len();
+    self.model.position.active_line = *new_line;
+    self.cursor_to_end_of_current_line()
+  }
+
+  pub fn cursor_to_end_of_current_line(&mut self) -> Result<CursorPosition, CursorBounds> {
     let current_line_len = self.get_current_line().len();
     let new_pos = self.model.cursor_to_end_of_line();
-    self.view.as_mut().unwrap().cursor_set_x(current_line_len);
     new_pos
   }
 
-  fn cursor_move<F, G>(&mut self, state_fn: F, view_fn: G) -> Result<CursorPosition, CursorBounds> 
-    where F: Fn(&mut EditorState) -> Result<CursorPosition, CursorBounds>,
-          G: Fn(&mut ViewState) -> () {
+  fn cursor_move<F>(&mut self, state_fn: F) -> Result<CursorPosition, CursorBounds> 
+    where F: Fn(&mut EditorState) -> Result<CursorPosition, CursorBounds> {
     state_fn(self.model)
-      .map(|new_pos| {
-        self.view.as_mut().map(|view| view_fn(view));
-        new_pos
-      })
-      .or_else(|err| self.cursor_to_end_of_line())
   }
 
   pub fn insert_char(&mut self, ch: &char, row: &usize, col: &usize) {
