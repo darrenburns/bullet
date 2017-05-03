@@ -7,6 +7,7 @@ use std::cmp;
 use std::fmt;
 
 static INFO_BAR_HEIGHT: usize = 1;
+static GUTTER_RIGHT_PAD: usize = 3;
 
 #[derive(Default, Debug, PartialEq)]
 pub struct Coordinate {
@@ -127,7 +128,7 @@ impl ViewState {
     self.screen.clear();
     self.render_info_bar(&latest_state);
     self.render_lines(&latest_state.content.lines, gutter_width);
-    self.screen.set_cursor((gutter_width + 3 + self.cursor_coords.x) as isize, self.cursor_coords.y as isize);
+    self.screen.set_cursor((gutter_width + GUTTER_RIGHT_PAD + self.cursor_coords.x) as isize, self.cursor_coords.y as isize);
     self.screen.present();
   }
 
@@ -141,7 +142,7 @@ impl ViewState {
           gut_width = gutter_width
         );
         self.screen.print(0, y - self.scroll.v_scroll, rustbox::RB_NORMAL, Color::White, Color::Black, &gutter);
-        self.screen.print(gutter_width + 3, y - self.scroll.v_scroll, rustbox::RB_NORMAL, Color::White, Color::Default, &lines[y]);
+        self.screen.print(gutter_width + GUTTER_RIGHT_PAD, y - self.scroll.v_scroll, rustbox::RB_NORMAL, Color::White, Color::Default, &lines[y]);
       }
     }
   }
