@@ -7,7 +7,7 @@ use std::cmp;
 use std::fmt;
 
 static INFO_BAR_HEIGHT: usize = 1;
-static GUTTER_RIGHT_PAD: usize = 3;
+static GUTTER_PAD: usize = 2;
 
 #[derive(Default, Debug, PartialEq)]
 pub struct Coordinate {
@@ -128,7 +128,7 @@ impl ViewState {
     self.screen.clear();
     self.render_info_bar(&latest_state);
     self.render_lines(&latest_state.content.lines, gutter_width);
-    self.screen.set_cursor((gutter_width + GUTTER_RIGHT_PAD + self.cursor_coords.x) as isize, self.cursor_coords.y as isize);
+    self.screen.set_cursor((gutter_width + GUTTER_PAD + self.cursor_coords.x) as isize, self.cursor_coords.y as isize);
     self.screen.present();
   }
 
@@ -136,22 +136,24 @@ impl ViewState {
     let upper_render_limit = self.scroll.v_scroll + 
       cmp::min(self.screen.height() - INFO_BAR_HEIGHT, lines.len());
     for y in self.scroll.v_scroll..upper_render_limit {
-      if y - self.scroll.v_scroll < self.screen.height() - INFO_BAR_HEIGHT {
-        let gutter =  format!("{line_num: >gut_width$} | ", 
+      if y - self.scroll.v_scroll < self.screen.height() - INFO_BAR_HEIGHT && y < lines.len() {
+        let gutter =  format!(" {line_num: >gut_width$} ", 
           line_num = (y+1).to_string(),
           gut_width = gutter_width
         );
         self.screen.print(0, y - self.scroll.v_scroll, rustbox::RB_NORMAL, Color::White, Color::Black, &gutter);
-        self.screen.print(gutter_width + GUTTER_RIGHT_PAD, y - self.scroll.v_scroll, rustbox::RB_NORMAL, Color::White, Color::Default, &lines[y]);
+        self.screen.print(gutter_width + GUTTER_PAD, y - self.scroll.v_scroll, rustbox::RB_NORMAL, Color::White, Color::Default, &lines[y]);
       }
     }
   }
 
   fn render_info_bar(&mut self, editor_state: &EditorState) {
-    let info_text = format!("Ln {0:?}, Col {1:?}, Scroll {2:?} ", 
-      editor_state.position.active_line,
-      editor_state.position.active_col, 
-      self.scroll.v_scroll);
+    let info_text = format!("Line {line_num:?} out of {line_count} lines. Column {col:?}. Scroll {scroll:?} ", 
+      line_num = editor_state.position.active_line,
+      line_count = editor_state.content.lines.len(),
+      col = editor_state.position.active_col, 
+      scroll = self.scroll.v_scroll
+    );
     let info_bar = format!("{info_text: >screen_width$}", 
       info_text = info_text,
       screen_width = self.screen.width());
