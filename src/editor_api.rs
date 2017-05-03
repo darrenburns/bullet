@@ -18,7 +18,13 @@ impl<'a> BulletApi<'a> {
 
   pub fn cursor_down(&mut self) -> Result<CursorPosition, CursorBounds> {
     self.cursor_move(EditorState::cursor_mv_down)
-        // .or_else()
+        // .or_else(|err| match err {
+        //   CursorBounds::RowOutOfBounds(_) => self.cursor_origin_x(),
+        //   CursorBounds::ColumnOutOfBounds(_) => {
+        //     let line_above = self.get_current_line_number() - 1;
+        //     self.cursor_to_end_of_line(&line_above)
+        //   }
+        // })
   }
 
   pub fn cursor_up(&mut self) -> Result<CursorPosition, CursorBounds> {
@@ -26,8 +32,13 @@ impl<'a> BulletApi<'a> {
         .or_else(|err| match err {
           CursorBounds::RowOutOfBounds(_) => self.cursor_origin_x(),
           CursorBounds::ColumnOutOfBounds(_) => {
-            let line_above = self.get_current_line_number() + 1;
-            self.cursor_to_end_of_line(&line_above)
+            let current_line = self.get_current_line_number();
+            let next_line = if current_line > 1 {
+              current_line - 1
+            } else {
+              1
+            };
+            self.cursor_to_end_of_line(&next_line)
           }
         })
   }
