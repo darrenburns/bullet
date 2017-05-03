@@ -85,6 +85,11 @@ impl<'a> BulletApi<'a> {
     self.model.content.insert_line(&(current_line_number + 1), "");
   }
 
+  pub fn delete_char_back(&mut self) -> Result<CursorPosition, CursorBounds> {
+    self.model.content.delete_char_behind(&self.model.position);
+    self.cursor_left()
+  }
+
   pub fn get_current_line(&self) -> &str {
     self.model.get_current_line()
   }

@@ -64,6 +64,7 @@ fn main_loop(mut state: EditorState, mut view: ViewState) {
             bullet_api.cursor_origin_x();
           }
           Key::Backspace => {
+            bullet_api.delete_char_back();
           }
           _ => {}
         }

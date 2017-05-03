@@ -128,6 +128,13 @@ impl EditorContent {
     self.lines.insert(line_num - 1, initial_content.to_owned());
   }
 
+  pub fn delete_char_behind(&mut self, pos: &CursorPosition) {
+    let ref mut active_line = self.lines[pos.active_line - 1];
+    if pos.active_col > 1 {
+      active_line.remove(pos.active_col - 2);
+    }
+  }
+
   pub fn get_line_by_line_number(&self, line_number: &usize) -> &str {
     &self.lines[line_number - 1]
   }
