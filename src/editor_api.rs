@@ -17,26 +17,31 @@ impl<'a> BulletApi<'a> {
   }
 
   pub fn cursor_down(&mut self) -> Result<CursorPosition, CursorBounds> {
-    let line_below = self.get_current_line_number() + 1;
     self.cursor_move(EditorState::cursor_mv_down)
-        .or_else(|err| {
-          match err {
-              CursorBounds::RowOutOfBounds(_) => { 
-                self.cursor_to_end_of_current_line()
-              },
-              CursorBounds::ColumnOutOfBounds(_) => {
-                self.cursor_to_end_of_line(&line_below)
-              },
+        // .or_else()
+  }
+
+  pub fn cursor_up(&mut self) -> Result<CursorPosition, CursorBounds> {
+    self.model.cursor_mv_up()
+        .or_else(|err| match err {
+          CursorBounds::RowOutOfBounds(_) => self.cursor_origin_x(),
+          CursorBounds::ColumnOutOfBounds(_) => {
+            let line_above = self.get_current_line_number() + 1;
+            self.cursor_to_end_of_line(&line_above)
           }
         })
   }
 
-  pub fn cursor_up(&mut self) -> Result<CursorPosition, CursorBounds> {
-    self.cursor_move(EditorState::cursor_mv_up)
-  }
-
   pub fn cursor_origin_x(&mut self) -> Result<CursorPosition, CursorBounds> {
     self.cursor_move(EditorState::cursor_origin_x)
+  }
+
+  fn cursor_origin(&mut self) -> Result<CursorPosition, CursorBounds> {
+    let active_line = self.model.position.active_line;
+    self.model.set_position(CursorPosition {
+      active_col: 1,
+      active_line
+    })
   }
 
   fn cursor_to_end_of_line(&mut self, new_line: &usize) -> Result<CursorPosition, CursorBounds> {
