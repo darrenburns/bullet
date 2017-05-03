@@ -85,26 +85,27 @@ impl ViewState {
     }
   }
 
-  pub fn cursor_mv_right(&mut self) {
+  pub fn cursor_mv_right(&mut self, editor_state: &mut EditorState) {
     if self.cursor_coords.x < self.screen.width() {
       self.cursor_coords.inc_x();
     }
   }
 
-  pub fn cursor_mv_left(&mut self) {
+  pub fn cursor_mv_left(&mut self, editor_state: &mut EditorState) {
     if self.cursor_coords.x > 0 {
       self.cursor_coords.dec_x();
     }
   }
 
-  pub fn cursor_mv_up(&mut self) {
+  pub fn cursor_mv_up(&mut self, editor_state: &mut EditorState) {
     if self.cursor_coords.y == 0 {
       self.scroll.scroll_up();
     }
   }
 
-  pub fn cursor_mv_down(&mut self) {
+  pub fn cursor_mv_down(&mut self, editor_state: &mut EditorState) {
     if self.cursor_coords.y == self.screen.height() - INFO_BAR_HEIGHT - 1 {
+      // && editor_state.get_current_line_number() != editor_state.content.lines.len() {
       self.scroll.scroll_down();
     }
   }
@@ -115,12 +116,12 @@ impl ViewState {
     }
   }
 
-  pub fn cursor_origin_x(&mut self) {
+  pub fn cursor_origin_x(&mut self, editor_state: &mut EditorState) {
     self.cursor_coords.x = 0;
   }
 
   pub fn repaint(&mut self, latest_state: &EditorState) {
-    let gutter_width = latest_state.content.lines.len().to_string().len() + 3;
+    let gutter_width = latest_state.content.lines.len().to_string().len();
     self.cursor_coords.x = latest_state.position.active_col - self.scroll.h_scroll - 1;
     self.cursor_coords.y = latest_state.position.active_line - self.scroll.v_scroll - 1;
     self.screen.clear();
@@ -135,20 +136,25 @@ impl ViewState {
       cmp::min(self.screen.height() - INFO_BAR_HEIGHT, lines.len());
     for y in self.scroll.v_scroll..upper_render_limit {
       if y - self.scroll.v_scroll < self.screen.height() - INFO_BAR_HEIGHT {
-        let line =  format!("{0: >gut_width$} | {line}", 
+        let gutter =  format!("{line_num: >gut_width$} | ", 
           line_num = (y+1).to_string(),
-          gut_width = gutter_width,
-          line = &lines[y]);
-        self.screen.print(0, y - self.scroll.v_scroll, rustbox::RB_NORMAL, Color::White, Color::Black, &line);
+          gut_width = gutter_width
+        );
+        self.screen.print(0, y - self.scroll.v_scroll, rustbox::RB_NORMAL, Color::White, Color::Black, &gutter);
+        self.screen.print(gutter_width + 3, y - self.scroll.v_scroll, rustbox::RB_NORMAL, Color::White, Color::Default, &lines[y]);
       }
     }
   }
 
   fn render_info_bar(&mut self, editor_state: &EditorState) {
-    let info_text = format!("Ln {0:?}, Col {1:?}, Scroll {2:?}", 
+    let info_text = format!("Ln {0:?}, Col {1:?}, Scroll {2:?} ", 
       editor_state.position.active_line,
-     editor_state.position.active_col, self.scroll.v_scroll);
-    self.screen.print(0, self.screen.height() - INFO_BAR_HEIGHT, rustbox::RB_BOLD, Color::Black, Color::White, &info_text);
+      editor_state.position.active_col, 
+      self.scroll.v_scroll);
+    let info_bar = format!("{info_text: >screen_width$}", 
+      info_text = info_text,
+      screen_width = self.screen.width());
+    self.screen.print(0, self.screen.height() - INFO_BAR_HEIGHT, rustbox::RB_BOLD, Color::White, Color::Magenta, &info_bar);
   }
 
 }

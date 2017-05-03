@@ -70,9 +70,9 @@ impl<'a> BulletApi<'a> {
 
   fn cursor_move<F, G>(&mut self, state_fn: F, view_fn: G) -> Result<CursorPosition, CursorBounds> 
     where F: Fn(&mut EditorState) -> Result<CursorPosition, CursorBounds>,
-          G: Fn(&mut ViewState) -> () {
+          G: Fn(&mut ViewState, &mut EditorState) -> () {
     let new_pos = state_fn(self.model);
-    view_fn(self.view.as_mut().unwrap());
+    view_fn(self.view.as_mut().unwrap(), self.model);
     new_pos
   }
 
