@@ -29,10 +29,9 @@ fn main_loop(mut state: EditorState, mut view: ViewState) {
     view: &mut Some(view), 
     model: &mut state
   };
-
+  bullet_api.repaint();
 
   loop {
-    bullet_api.repaint();
 
     match bullet_api.view.as_mut().unwrap().screen.poll_event(false) {
       Ok(rustbox::Event::KeyEvent(key)) => {
@@ -64,12 +63,16 @@ fn main_loop(mut state: EditorState, mut view: ViewState) {
             bullet_api.cursor_down();
             bullet_api.cursor_origin_x();
           }
+          Key::Backspace => {
+          }
           _ => {}
         }
       },
       Err(e) => panic!("{}", e.description()),
       _ => { }
     }
+    
+    bullet_api.repaint();
   }
 }
 

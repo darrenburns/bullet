@@ -58,12 +58,16 @@ impl EditorScroll {
   }
 
   pub fn scroll_up(&mut self) {
-    self.v_scroll -= 1;
+    if self.v_scroll > 0 {
+      self.v_scroll -= 1;
+    }
   }
 }
 
 pub struct ViewState {
-  pub cursor_coords: Coordinate,
+  // We can determine these by looking at the current scroll and the active cursor position
+  // in the editor state. cursor_coords.y = active_line - scroll.v_scroll - 1 ??
+  pub cursor_coords: Coordinate,  
   pub scroll: EditorScroll,
   pub screen: RustBox
 }
@@ -94,17 +98,13 @@ impl ViewState {
   }
 
   pub fn cursor_mv_up(&mut self) {
-    if self.cursor_coords.y > 0 {
-      self.cursor_coords.dec_y();
-    } else {
+    if self.cursor_coords.y == 0 {
       self.scroll.scroll_up();
     }
   }
 
   pub fn cursor_mv_down(&mut self) {
-    if self.cursor_coords.y < self.screen.height() - INFO_BAR_HEIGHT - 1 {
-      self.cursor_coords.inc_y();
-    } else {
+    if self.cursor_coords.y == self.screen.height() - INFO_BAR_HEIGHT - 1 {
       self.scroll.scroll_down();
     }
   }
@@ -119,27 +119,35 @@ impl ViewState {
     self.cursor_coords.x = 0;
   }
 
-
   pub fn repaint(&mut self, latest_state: &EditorState) {
+    let gutter_width = latest_state.content.lines.len().to_string().len() + 3;
+    self.cursor_coords.x = latest_state.position.active_col - self.scroll.h_scroll - 1;
+    self.cursor_coords.y = latest_state.position.active_line - self.scroll.v_scroll - 1;
     self.screen.clear();
     self.render_info_bar(&latest_state);
-    self.render_lines(&latest_state.content.lines);
-    self.screen.set_cursor((latest_state.position.active_col - 1) as isize, (latest_state.position.active_line - 1) as isize);
+    self.render_lines(&latest_state.content.lines, gutter_width);
+    self.screen.set_cursor((gutter_width + 3 + self.cursor_coords.x) as isize, self.cursor_coords.y as isize);
     self.screen.present();
   }
 
-  fn render_lines(&mut self, lines: &Vec<String>) {
+  fn render_lines(&mut self, lines: &Vec<String>, gutter_width: usize) {
     let upper_render_limit = self.scroll.v_scroll + 
       cmp::min(self.screen.height() - INFO_BAR_HEIGHT, lines.len());
     for y in self.scroll.v_scroll..upper_render_limit {
       if y - self.scroll.v_scroll < self.screen.height() - INFO_BAR_HEIGHT {
-        self.screen.print(0, y - self.scroll.v_scroll, rustbox::RB_NORMAL, Color::White, Color::Black, &lines[y]);
+        let line =  format!("{0: >gut_width$} | {line}", 
+          line_num = (y+1).to_string(),
+          gut_width = gutter_width,
+          line = &lines[y]);
+        self.screen.print(0, y - self.scroll.v_scroll, rustbox::RB_NORMAL, Color::White, Color::Black, &line);
       }
     }
   }
 
   fn render_info_bar(&mut self, editor_state: &EditorState) {
-    let info_text = format!("{0:?}", editor_state);
+    let info_text = format!("Ln {0:?}, Col {1:?}, Scroll {2:?}", 
+      editor_state.position.active_line,
+     editor_state.position.active_col, self.scroll.v_scroll);
     self.screen.print(0, self.screen.height() - INFO_BAR_HEIGHT, rustbox::RB_BOLD, Color::Black, Color::White, &info_text);
   }
 
