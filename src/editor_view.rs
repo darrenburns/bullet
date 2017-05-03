@@ -106,7 +106,6 @@ impl ViewState {
 
   pub fn cursor_mv_down(&mut self, editor_state: &mut EditorState) {
     if self.cursor_coords.y == self.screen.height() - INFO_BAR_HEIGHT - 1 {
-      // && editor_state.get_current_line_number() != editor_state.content.lines.len() {
       self.scroll.scroll_down();
     }
   }
