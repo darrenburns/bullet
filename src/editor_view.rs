@@ -7,7 +7,7 @@ use std::cmp;
 use std::fmt;
 
 static INFO_BAR_HEIGHT: usize = 1;
-static GUTTER_PAD: usize = 2;
+static GUTTER_PAD: usize = 3;
 
 #[derive(Default, Debug, PartialEq)]
 pub struct Coordinate {
@@ -126,21 +126,31 @@ impl ViewState {
     self.cursor_coords.y = latest_state.position.active_line - self.scroll.v_scroll - 1;
     self.screen.clear();
     self.render_info_bar(&latest_state);
-    self.render_lines(&latest_state.content.lines, gutter_width);
+    self.render_lines(&latest_state.content.lines, gutter_width, latest_state.position.active_line);
     self.screen.set_cursor((gutter_width + GUTTER_PAD + self.cursor_coords.x) as isize, self.cursor_coords.y as isize);
     self.screen.present();
   }
 
-  fn render_lines(&mut self, lines: &Vec<String>, gutter_width: usize) {
+  fn render_lines(&mut self, lines: &Vec<String>, gutter_width: usize, active_line: usize) {
     let upper_render_limit = self.scroll.v_scroll + 
       cmp::min(self.screen.height() - INFO_BAR_HEIGHT, lines.len());
     for y in self.scroll.v_scroll..upper_render_limit {
       if y - self.scroll.v_scroll < self.screen.height() - INFO_BAR_HEIGHT && y < lines.len() {
-        let gutter =  format!(" {line_num: >gut_width$} ", 
+        let gutter =  format!(" {line_num: >gut_width$}  ", 
           line_num = (y+1).to_string(),
           gut_width = gutter_width
         );
-        self.screen.print(0, y - self.scroll.v_scroll, rustbox::RB_NORMAL, Color::White, Color::Black, &gutter);
+        let gutter_row_style = if y == active_line - 1 {
+          rustbox::RB_BOLD
+        } else {
+          rustbox::RB_NORMAL
+        };
+        let gutter_render_colour = if y == active_line - 1 {
+          rustbox::Color::Cyan
+        } else {
+          rustbox::Color::Magenta
+        };
+        self.screen.print(0, y - self.scroll.v_scroll, gutter_row_style, gutter_render_colour, Color::Black, &gutter);
         self.screen.print(gutter_width + GUTTER_PAD, y - self.scroll.v_scroll, rustbox::RB_NORMAL, Color::White, Color::Default, &lines[y]);
       }
     }
