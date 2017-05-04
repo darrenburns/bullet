@@ -58,12 +58,12 @@ impl<'a> BulletApi<'a> {
 
   fn cursor_to_end_of_line(&mut self, new_line: &usize) -> Result<CursorPosition, CursorBounds> {
     self.model.position.active_line = *new_line;
-    let new_line_len = self.model.get_current_line().len();
+    let new_line_len = self.model.get_current_line().content.len();
     self.cursor_to_end_of_current_line()
   }
 
   pub fn cursor_to_end_of_current_line(&mut self) -> Result<CursorPosition, CursorBounds> {
-    let current_line_len = self.model.get_current_line().len();
+    let current_line_len = self.model.get_current_line().content.len();
     let new_pos = self.model.cursor_to_end_of_line();
     new_pos
   }
@@ -100,7 +100,7 @@ impl<'a> BulletApi<'a> {
       self.cursor_up();
       let mut new_pos = self.cursor_to_end_of_current_line();
       // append line to end of prev line
-      self.append_to_line(new_pos.as_mut().unwrap().active_line, deleted_line);
+      self.append_to_line(new_pos.as_mut().unwrap().active_line, &deleted_line.content);
       new_pos
     } else {
       // otherwise do normal backspace

@@ -30,7 +30,7 @@ impl EditorState {
   pub fn open_file(&mut self, filename: &str) {
     let lines = BufReader::new(File::open(filename).unwrap())
       .lines()
-      .map(|l| l.unwrap())
+      .map(|l| LineBuffer { content: l.unwrap(), is_dirty: false })
       .collect();
     self.filename = filename.to_string();
     self.content = EditorContent { lines };
@@ -40,7 +40,14 @@ impl EditorState {
   pub fn save_file(&mut self) {
     let path = Path::new(&self.filename);
     let mut file = File::create(&self.filename).unwrap();
-    file.write_all(self.content.lines.join("\n").as_bytes()).unwrap();
+    let content_as_string = self.content.lines
+      .iter()
+      .map(|l| l.content.clone())
+      .collect::<Vec<_>>()
+      .join("\n");
+
+      
+    file.write_all(content_as_string.as_bytes()).unwrap();
   }
 
   pub fn cursor_mv_right(&mut self) -> Result<CursorPosition, CursorBounds> {
@@ -88,7 +95,7 @@ impl EditorState {
   }
 
   pub fn cursor_to_end_of_line(&mut self) -> Result<CursorPosition, CursorBounds> {
-    let new_col = self.get_current_line().len() + 1;
+    let new_col = self.get_current_line().content.len() + 1;
     let active_line = self.position.active_line;
     self.set_position(CursorPosition {
       active_col: new_col,
@@ -100,7 +107,7 @@ impl EditorState {
     if new_pos.active_line < 1 || new_pos.active_line > self.content.lines.len() {
       return Err(CursorBounds::RowOutOfBounds(""));
     }
-    let line_len = self.get_line_by_line_number(&new_pos.active_line).len();
+    let line_len = self.get_line_by_line_number(&new_pos.active_line).content.len();
     if new_pos.active_col < 1 || new_pos.active_col > line_len + 1 {
       return Err(CursorBounds::ColumnOutOfBounds(""));
     }
@@ -109,11 +116,11 @@ impl EditorState {
   }
 
   pub fn cursor_within_line_bounds(&self) -> bool {
-    let current_line_len = self.get_line_by_line_number(&self.position.active_line).len();
+    let current_line_len = self.get_line_by_line_number(&self.position.active_line).content.len();
     self.position.active_col <= current_line_len
   }
 
-  pub fn get_line_by_line_number(&self, line_num: &usize) -> &str {
+  pub fn get_line_by_line_number(&self, line_num: &usize) -> &LineBuffer {
     &self.content.lines[line_num - 1]
   }
 
@@ -121,55 +128,77 @@ impl EditorState {
     self.position.active_line
   }
 
-  pub fn get_current_line(&mut self) -> &str {
+  pub fn get_current_line(&mut self) -> &LineBuffer {
     self.content.get_line_by_line_number(&mut self.get_current_line_number())
   }
 
 }
 
 #[derive(Default, Debug, Clone)]
+pub struct LineBuffer {
+  pub content: String,
+  pub is_dirty: bool
+}
+
+
+#[derive(Default, Debug, Clone)]
 pub struct EditorContent {
-  pub lines: Vec<String>
+  pub lines: Vec<LineBuffer>
 }
 
 impl EditorContent {
 
   pub fn new() -> EditorContent {
     EditorContent {
-      lines: vec!["".to_string()]
+      lines: vec![
+        LineBuffer {
+          content: "".to_string(),
+          is_dirty: false
+        }
+      ]
     }
   }
 
   pub fn insert_char(&mut self, ch: &char, col: &usize, line_num: &usize) {
-    let mut chars: Vec<char> = self.lines[line_num-1].chars().collect();
+    let mut chars: Vec<char> = self.lines[line_num-1].content.chars().collect();
     chars.insert(col-1, *ch);
-    self.lines[line_num-1] = chars.into_iter().collect::<String>();
+    self.lines[line_num-1] = LineBuffer {
+      content: chars.into_iter().collect::<String>(),
+      is_dirty: true
+    }
   }
 
   pub fn insert_line(&mut self, line_num: &usize, initial_content: &str) {
-    self.lines.insert(line_num - 1, initial_content.to_owned());
+    self.lines.insert(line_num - 1, LineBuffer {
+      content: initial_content.to_owned(),
+      is_dirty: true
+    });
   }
 
   pub fn delete_char_behind(&mut self, pos: &CursorPosition) {
     let ref mut active_line = self.lines[pos.active_line - 1];
     if pos.active_col > 1 {
-      active_line.remove(pos.active_col - 2);
+      active_line.content.remove(pos.active_col - 2);
     }
+    active_line.is_dirty = true;
   }
 
   pub fn append_to_line(&mut self, line_num: usize, append_str: &str) {
     let mut line = self.lines[line_num - 1].clone();
-    line += append_str;
-    self.lines[line_num - 1] = line.to_string();
+    line.content += append_str;
+    self.lines[line_num - 1] = LineBuffer {
+      content: line.content.to_string(),
+      is_dirty: true
+    }
   }
 
-  pub fn delete_line(&mut self, line_number: usize) -> String {
+  pub fn delete_line(&mut self, line_number: usize) -> LineBuffer {
     let deleted_line = self.lines[line_number - 1].clone();
     self.lines.remove(line_number - 1);
     deleted_line
   }
 
-  pub fn get_line_by_line_number(&self, line_number: &usize) -> &str {
+  pub fn get_line_by_line_number(&self, line_number: &usize) -> &LineBuffer {
     &self.lines[line_number - 1]
   }
 

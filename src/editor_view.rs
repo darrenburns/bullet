@@ -1,7 +1,7 @@
 extern crate rustbox;
 
 use rustbox::{Color, RustBox};
-use editor_state::EditorState;
+use editor_state::{EditorState, LineBuffer};
 
 use std::cmp;
 use std::fmt;
@@ -129,7 +129,7 @@ impl ViewState {
     self.screen.present();
   }
 
-  fn render_lines(&mut self, lines: &Vec<String>, gutter_width: usize, active_line: usize) {
+  fn render_lines(&mut self, lines: &Vec<LineBuffer>, gutter_width: usize, active_line: usize) {
     let upper_render_limit = self.scroll.v_scroll + 
       cmp::min(self.screen.height() - INFO_BAR_HEIGHT, lines.len());
     for y in self.scroll.v_scroll..upper_render_limit {
@@ -149,7 +149,7 @@ impl ViewState {
           rustbox::Color::Magenta
         };
         self.screen.print(0, y - self.scroll.v_scroll, gutter_row_style, gutter_render_colour, Color::Black, &gutter);
-        self.screen.print(gutter_width + GUTTER_PAD, y - self.scroll.v_scroll, rustbox::RB_NORMAL, Color::White, Color::Default, &lines[y]);
+        self.screen.print(gutter_width + GUTTER_PAD, y - self.scroll.v_scroll, rustbox::RB_NORMAL, Color::White, Color::Default, &lines[y].content);
       }
     }
   }
