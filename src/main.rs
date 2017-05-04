@@ -8,6 +8,7 @@ mod editor_state;
 mod editor_view;
 mod editor_api;
 
+use std::env;
 use std::error::Error;
 use std::default::Default;
 
@@ -18,8 +19,14 @@ use editor_api::BulletApi;
 use rustbox::Key;
 
 fn main() {
+  let args: Vec<String> = env::args().collect();
   let view: ViewState = ViewState::new();
-  let state: EditorState = EditorState::new();
+  let mut state: EditorState = EditorState::new();
+  
+  if args.len() == 2 {
+    state.open_file(&args[1]);
+  }
+
   main_loop(state, view);
 }
 

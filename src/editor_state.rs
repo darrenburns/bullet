@@ -1,4 +1,6 @@
-
+use std::fs::File;
+use std::io::BufReader;
+use std::io::prelude::*;
 
 #[derive(Clone, Debug)]
 pub struct CursorPosition {
@@ -19,6 +21,15 @@ impl EditorState {
       content: EditorContent::new(),
       position: CursorPosition {active_line: 1, active_col: 1}
     }
+  }
+
+  pub fn open_file(&mut self, filename: &str) {
+    let lines = BufReader::new(File::open(filename).unwrap())
+      .lines()
+      .map(|l| l.unwrap())
+      .collect();
+    self.content = EditorContent { lines };
+    self.position = CursorPosition {active_line: 1, active_col: 1}
   }
 
   pub fn cursor_mv_right(&mut self) -> Result<CursorPosition, CursorBounds> {
