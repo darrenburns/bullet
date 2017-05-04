@@ -157,15 +157,21 @@ impl ViewState {
   }
 
   fn render_info_bar(&mut self, editor_state: &EditorState) {
-    let info_text = format!("Line {line_num:?} out of {line_count} lines. Column {col:?}. Scroll {scroll:?} ", 
+    let info_text_left = format!(" Editing {file_name}",
+      file_name = editor_state.filename
+    );
+    
+    let info_text_right = format!("Line {line_num:?} out of {line_count} lines. Column {col:?}. Scroll {scroll:?} ", 
       line_num = editor_state.position.active_line,
       line_count = editor_state.content.lines.len(),
       col = editor_state.position.active_col, 
       scroll = self.scroll.v_scroll
     );
-    let info_bar = format!("{info_text: >screen_width$}", 
-      info_text = info_text,
-      screen_width = self.screen.width());
+    let info_bar = format!("{info_text_left: <half_screen_width$}{info_text_right: >half_screen_width$}", 
+      info_text_left = info_text_left,
+      info_text_right = info_text_right,
+      half_screen_width = self.screen.width() / 2
+    );
     self.screen.print(0, self.screen.height() - INFO_BAR_HEIGHT, rustbox::RB_BOLD, Color::White, Color::Magenta, &info_bar);
   }
 

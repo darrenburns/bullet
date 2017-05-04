@@ -10,6 +10,7 @@ pub struct CursorPosition {
 
 #[derive(Clone, Debug)]
 pub struct EditorState {
+  pub filename: String,
   pub content: EditorContent,
   pub position: CursorPosition
 }
@@ -18,6 +19,7 @@ impl EditorState {
 
   pub fn new() -> EditorState {
     EditorState {
+      filename: "".to_string(),
       content: EditorContent::new(),
       position: CursorPosition {active_line: 1, active_col: 1}
     }
@@ -28,6 +30,7 @@ impl EditorState {
       .lines()
       .map(|l| l.unwrap())
       .collect();
+    self.filename = filename.to_string();
     self.content = EditorContent { lines };
     self.position = CursorPosition {active_line: 1, active_col: 1}
   }
