@@ -99,8 +99,8 @@ impl EditorState {
     self.position.active_line
   }
 
-  pub fn get_current_line(&self) -> &str {
-    self.content.get_line_by_line_number(&self.get_current_line_number())
+  pub fn get_current_line(&mut self) -> &str {
+    self.content.get_line_by_line_number(&mut self.get_current_line_number())
   }
 
 }
@@ -133,6 +133,18 @@ impl EditorContent {
     if pos.active_col > 1 {
       active_line.remove(pos.active_col - 2);
     }
+  }
+
+  pub fn append_to_line(&mut self, line_num: usize, append_str: &str) {
+    let mut line = self.lines[line_num - 1].clone();
+    line += append_str;
+    self.lines[line_num - 1] = line.to_string();
+  }
+
+  pub fn delete_line(&mut self, line_number: usize) -> String {
+    let deleted_line = self.lines[line_number - 1].clone();
+    self.lines.remove(line_number - 1);
+    deleted_line
   }
 
   pub fn get_line_by_line_number(&self, line_number: &usize) -> &str {

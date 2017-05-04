@@ -57,13 +57,13 @@ impl<'a> BulletApi<'a> {
   }
 
   fn cursor_to_end_of_line(&mut self, new_line: &usize) -> Result<CursorPosition, CursorBounds> {
-    let new_line_len = self.get_current_line().len();
     self.model.position.active_line = *new_line;
+    let new_line_len = self.model.get_current_line().len();
     self.cursor_to_end_of_current_line()
   }
 
   pub fn cursor_to_end_of_current_line(&mut self) -> Result<CursorPosition, CursorBounds> {
-    let current_line_len = self.get_current_line().len();
+    let current_line_len = self.model.get_current_line().len();
     let new_pos = self.model.cursor_to_end_of_line();
     new_pos
   }
@@ -86,12 +86,26 @@ impl<'a> BulletApi<'a> {
   }
 
   pub fn delete_char_back(&mut self) -> Result<CursorPosition, CursorBounds> {
-    self.model.content.delete_char_behind(&self.model.position);
-    self.cursor_left()
+    let active_line_num = self.model.position.active_line;
+    // if we're at the beginning of a line
+    if self.model.position.active_col == 1 && active_line_num > 1 {
+        // save current line in var, and delete from editor
+      let deleted_line = &self.model.content.delete_line(active_line_num);
+      
+      // move cursor to end of previous line
+      let mut new_pos = self.cursor_to_end_of_line(&(active_line_num - 1));
+      // append line to end of prev line
+      self.append_to_line(new_pos.as_mut().unwrap().active_line, deleted_line);
+      new_pos
+    } else {
+      // otherwise do normal backspace
+      self.model.content.delete_char_behind(&self.model.position);
+      self.cursor_left()
+    }
   }
 
-  pub fn get_current_line(&self) -> &str {
-    self.model.get_current_line()
+  pub fn append_to_line(&mut self, line_num: usize, append_str: &str) {
+    self.model.content.append_to_line(line_num, append_str);
   }
 
   pub fn get_current_line_number(&self) -> usize {
