@@ -1,6 +1,8 @@
 use std::fs::File;
+use std::path::Path;
 use std::io::BufReader;
 use std::io::prelude::*;
+use std::io::Error;
 
 #[derive(Clone, Debug)]
 pub struct CursorPosition {
@@ -33,6 +35,12 @@ impl EditorState {
     self.filename = filename.to_string();
     self.content = EditorContent { lines };
     self.position = CursorPosition {active_line: 1, active_col: 1}
+  }
+
+  pub fn save_file(&mut self) {
+    let path = Path::new(&self.filename);
+    let mut file = File::create(&self.filename).unwrap();
+    file.write_all(self.content.lines.join("\n").as_bytes()).unwrap();
   }
 
   pub fn cursor_mv_right(&mut self) -> Result<CursorPosition, CursorBounds> {
