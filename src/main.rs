@@ -47,6 +47,9 @@ fn main_loop(mut state: EditorState, mut view: ViewState) {
 
         match key {
           Key::Ctrl('q') => { break; }
+          Key::Ctrl('s') => {
+            bullet_api.save_file();
+          }
 
           Key::Right => {
             bullet_api.cursor_right();

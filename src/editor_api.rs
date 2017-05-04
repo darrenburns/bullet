@@ -80,6 +80,10 @@ impl<'a> BulletApi<'a> {
     self.model.content.insert_char(&ch, &col, &row);
   }
 
+  pub fn save_file(&mut self) {
+    self.model.save_file();
+  }
+
   pub fn insert_line_below(&mut self) {
     let current_line_number = self.get_current_line_number();
     self.model.content.insert_line(&(current_line_number + 1), "");
