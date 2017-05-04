@@ -66,8 +66,6 @@ impl EditorScroll {
 }
 
 pub struct ViewState {
-  // We can determine these by looking at the current scroll and the active cursor position
-  // in the editor state. cursor_coords.y = active_line - scroll.v_scroll - 1 ??
   pub cursor_coords: Coordinate,  
   pub scroll: EditorScroll,
   pub screen: RustBox
@@ -167,6 +165,7 @@ impl ViewState {
       col = editor_state.position.active_col, 
       scroll = self.scroll.v_scroll
     );
+
     let info_bar = format!("{info_text_left: <half_screen_width$}{info_text_right: >half_screen_width$}", 
       info_text_left = info_text_left,
       info_text_right = info_text_right,
