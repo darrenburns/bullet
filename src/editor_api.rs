@@ -93,7 +93,8 @@ impl<'a> BulletApi<'a> {
       let deleted_line = &self.model.content.delete_line(active_line_num);
       
       // move cursor to end of previous line
-      let mut new_pos = self.cursor_to_end_of_line(&(active_line_num - 1));
+      self.cursor_up();
+      let mut new_pos = self.cursor_to_end_of_current_line();
       // append line to end of prev line
       self.append_to_line(new_pos.as_mut().unwrap().active_line, deleted_line);
       new_pos
