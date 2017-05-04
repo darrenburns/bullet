@@ -134,7 +134,7 @@ impl ViewState {
       cmp::min(self.screen.height() - INFO_BAR_HEIGHT, lines.len());
     for y in self.scroll.v_scroll..upper_render_limit {
       if y - self.scroll.v_scroll < self.screen.height() - INFO_BAR_HEIGHT && y < lines.len() {
-        let gutter =  format!(" {line_num: >gut_width$}  ", 
+        let gutter =  format!(" {line_num: >gut_width$} ", 
           line_num = (y+1).to_string(),
           gut_width = gutter_width
         );
@@ -148,7 +148,13 @@ impl ViewState {
         } else {
           rustbox::Color::Magenta
         };
+        let gutter_dirty_colour = if lines[y].is_dirty {
+          rustbox::Color::Green
+        } else {
+          rustbox::Color::Black
+        };
         self.screen.print(0, y - self.scroll.v_scroll, gutter_row_style, gutter_render_colour, Color::Black, &gutter);
+        self.screen.print(gutter_width + GUTTER_PAD - 1, y - self.scroll.v_scroll, gutter_row_style, gutter_render_colour, gutter_dirty_colour, " ");
         self.screen.print(gutter_width + GUTTER_PAD, y - self.scroll.v_scroll, rustbox::RB_NORMAL, Color::White, Color::Default, &lines[y].content);
       }
     }

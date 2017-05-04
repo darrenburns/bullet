@@ -46,7 +46,9 @@ impl EditorState {
       .collect::<Vec<_>>()
       .join("\n");
 
-      
+    // After saving, mark all lines as clean
+    self.content.lines.iter_mut().map(|l| l.is_dirty = false);
+    
     file.write_all(content_as_string.as_bytes()).unwrap();
   }
 
