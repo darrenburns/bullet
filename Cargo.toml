@@ -7,6 +7,7 @@ authors = ["Darren Burns <darrenb900@gmail.com>"]
 rustbox = "*"
 termbox-sys = "0.2.9"
 quick-error = "1.2.0"
+syntect = "1.3"
 
 [dev-dependencies]
 stainless = "*"

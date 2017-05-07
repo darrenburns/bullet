@@ -4,6 +4,8 @@ use std::io::BufReader;
 use std::io::prelude::*;
 use std::io::Error;
 
+use line_buffer::LineBuffer;
+
 #[derive(Clone, Debug)]
 pub struct CursorPosition {
   pub active_line: usize,
@@ -11,16 +13,16 @@ pub struct CursorPosition {
 }
 
 #[derive(Clone, Debug)]
-pub struct EditorState {
+pub struct Editor {
   pub filename: String,
   pub content: EditorContent,
   pub position: CursorPosition
 }
 
-impl EditorState {
+impl Editor {
 
-  pub fn new() -> EditorState {
-    EditorState {
+  pub fn new() -> Editor {
+    Editor {
       filename: "".to_string(),
       content: EditorContent::new(),
       position: CursorPosition {active_line: 1, active_col: 1}
@@ -137,13 +139,6 @@ impl EditorState {
 }
 
 #[derive(Default, Debug, Clone)]
-pub struct LineBuffer {
-  pub content: String,
-  pub is_dirty: bool
-}
-
-
-#[derive(Default, Debug, Clone)]
 pub struct EditorContent {
   pub lines: Vec<LineBuffer>
 }
@@ -209,12 +204,12 @@ impl EditorContent {
 
 #[cfg(test)]
 mod tests {
-  pub use super::EditorState;
+  pub use super::Editor;
 
   describe! cursor_movement {
 
     before_each {
-      let mut state = EditorState::new();
+      let mut state = Editor::new();
       let line_two_content = "line two";
       state.content.insert_line(&2, line_two_content);
       state.content.insert_line(&3, "line three");
@@ -226,7 +221,7 @@ mod tests {
     }
 
     it "should initialise with a single line" {
-      let some_state = EditorState::new();
+      let some_state = Editor::new();
       assert_eq!(some_state.content.lines.len(), 1);
     }
 

@@ -4,15 +4,16 @@
 extern crate rustbox;
 #[macro_use] extern crate quick_error;
 
-mod editor_state;
+mod editor;
 mod editor_view;
 mod editor_api;
+mod line_buffer;
 
 use std::env;
 use std::error::Error;
 use std::default::Default;
 
-use editor_state::EditorState;
+use editor::Editor;
 use editor_view::ViewState;
 use editor_api::BulletApi;
 
@@ -21,7 +22,7 @@ use rustbox::Key;
 fn main() {
   let args: Vec<String> = env::args().collect();
   let view: ViewState = ViewState::new();
-  let mut state: EditorState = EditorState::new();
+  let mut state: Editor = Editor::new();
   
   if args.len() == 2 {
     state.open_file(&args[1]);
@@ -30,7 +31,7 @@ fn main() {
   main_loop(state, view);
 }
 
-fn main_loop(mut state: EditorState, mut view: ViewState) {
+fn main_loop(mut state: Editor, mut view: ViewState) {
 
   let mut bullet_api: BulletApi = BulletApi {
     view: &mut Some(view), 

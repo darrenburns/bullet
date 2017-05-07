@@ -1,7 +1,8 @@
 extern crate rustbox;
 
 use rustbox::{Color, RustBox};
-use editor_state::{EditorState, LineBuffer};
+use editor::Editor;
+use line_buffer::LineBuffer;
 
 use std::cmp;
 use std::fmt;
@@ -84,25 +85,25 @@ impl ViewState {
     }
   }
 
-  pub fn cursor_mv_right(&mut self, editor_state: &mut EditorState) {
+  pub fn cursor_mv_right(&mut self, editor_state: &mut Editor) {
     if self.cursor_coords.x < self.screen.width() {
       self.cursor_coords.inc_x();
     }
   }
 
-  pub fn cursor_mv_left(&mut self, editor_state: &mut EditorState) {
+  pub fn cursor_mv_left(&mut self, editor_state: &mut Editor) {
     if self.cursor_coords.x > 0 {
       self.cursor_coords.dec_x();
     }
   }
 
-  pub fn cursor_mv_up(&mut self, editor_state: &mut EditorState) {
+  pub fn cursor_mv_up(&mut self, editor_state: &mut Editor) {
     if self.cursor_coords.y == 0 {
       self.scroll.scroll_up();
     }
   }
 
-  pub fn cursor_mv_down(&mut self, editor_state: &mut EditorState) {
+  pub fn cursor_mv_down(&mut self, editor_state: &mut Editor) {
     if self.cursor_coords.y == self.screen.height() - INFO_BAR_HEIGHT - 1 {
       self.scroll.scroll_down();
     }
@@ -114,11 +115,11 @@ impl ViewState {
     }
   }
 
-  pub fn cursor_origin_x(&mut self, editor_state: &mut EditorState) {
+  pub fn cursor_origin_x(&mut self, editor_state: &mut Editor) {
     self.cursor_coords.x = 0;
   }
 
-  pub fn repaint(&mut self, latest_state: &EditorState) {
+  pub fn repaint(&mut self, latest_state: &Editor) {
     let gutter_width = latest_state.content.lines.len().to_string().len();
     self.cursor_coords.x = latest_state.position.active_col - self.scroll.h_scroll - 1;
     self.cursor_coords.y = latest_state.position.active_line - self.scroll.v_scroll - 1;
@@ -160,7 +161,7 @@ impl ViewState {
     }
   }
 
-  fn render_info_bar(&mut self, editor_state: &EditorState) {
+  fn render_info_bar(&mut self, editor_state: &Editor) {
     let info_text_left = format!(" Editing {file_name}",
       file_name = editor_state.filename
     );

@@ -1,23 +1,23 @@
 use editor_view::ViewState;
-use editor_state::{EditorState, CursorPosition, CursorBounds};
+use editor::{Editor, CursorPosition, CursorBounds};
 
 pub struct BulletApi<'a> {
   pub view: &'a mut Option<ViewState>,
-  pub model: &'a mut EditorState
+  pub model: &'a mut Editor
 }
 
 impl<'a> BulletApi<'a> {
 
   pub fn cursor_right(&mut self) -> Result<CursorPosition, CursorBounds> {
-    self.cursor_move(EditorState::cursor_mv_right, ViewState::cursor_mv_right)
+    self.cursor_move(Editor::cursor_mv_right, ViewState::cursor_mv_right)
   }
 
   pub fn cursor_left(&mut self) -> Result<CursorPosition, CursorBounds> {
-    self.cursor_move(EditorState::cursor_mv_left, ViewState::cursor_mv_left)
+    self.cursor_move(Editor::cursor_mv_left, ViewState::cursor_mv_left)
   }
 
   pub fn cursor_down(&mut self) -> Result<CursorPosition, CursorBounds> {
-    self.cursor_move(EditorState::cursor_mv_down, ViewState::cursor_mv_down)
+    self.cursor_move(Editor::cursor_mv_down, ViewState::cursor_mv_down)
         .or_else(|err| match err {
           CursorBounds::RowOutOfBounds(_) => 
             self.cursor_to_end_of_current_line(),
@@ -29,7 +29,7 @@ impl<'a> BulletApi<'a> {
   }
 
   pub fn cursor_up(&mut self) -> Result<CursorPosition, CursorBounds> {
-    self.cursor_move(EditorState::cursor_mv_up, ViewState::cursor_mv_up)
+    self.cursor_move(Editor::cursor_mv_up, ViewState::cursor_mv_up)
         .or_else(|err| match err {
           CursorBounds::RowOutOfBounds(_) => self.cursor_origin_x(),
           CursorBounds::ColumnOutOfBounds(_) => {
@@ -45,7 +45,7 @@ impl<'a> BulletApi<'a> {
   }
 
   pub fn cursor_origin_x(&mut self) -> Result<CursorPosition, CursorBounds> {
-    self.cursor_move(EditorState::cursor_origin_x, ViewState::cursor_origin_x)
+    self.cursor_move(Editor::cursor_origin_x, ViewState::cursor_origin_x)
   }
 
   fn cursor_origin(&mut self) -> Result<CursorPosition, CursorBounds> {
@@ -69,8 +69,8 @@ impl<'a> BulletApi<'a> {
   }
 
   fn cursor_move<F, G>(&mut self, state_fn: F, view_fn: G) -> Result<CursorPosition, CursorBounds> 
-    where F: Fn(&mut EditorState) -> Result<CursorPosition, CursorBounds>,
-          G: Fn(&mut ViewState, &mut EditorState) -> () {
+    where F: Fn(&mut Editor) -> Result<CursorPosition, CursorBounds>,
+          G: Fn(&mut ViewState, &mut Editor) -> () {
     let new_pos = state_fn(self.model);
     view_fn(self.view.as_mut().unwrap(), self.model);
     new_pos
