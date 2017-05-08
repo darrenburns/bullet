@@ -60,7 +60,6 @@ trait Widget {
   fn get_key(&self) -> WidgetKey;
   fn handle_input(&self, input: Key);
   fn is_displayed(&self) -> bool;
-  fn is_active(&self) -> bool;
   fn show(&mut self);
   fn hide(&mut self);
 }
