@@ -1,22 +1,30 @@
 use editor_view::ViewState;
 use editor::{Editor, CursorPosition, CursorBounds};
 
-pub struct BulletApi<'a> {
+pub trait EditorContext {
+  fn cursor_right(&mut self) -> Result<CursorPosition, CursorBounds>;
+  fn cursor_left(&mut self) -> Result<CursorPosition, CursorBounds>;
+  fn cursor_down(&mut self) -> Result<CursorPosition, CursorBounds>;
+  fn cursor_up(&mut self) -> Result<CursorPosition, CursorBounds>;
+  fn cursor_origin_x(&mut self) -> Result<CursorPosition, CursorBounds>;
+  fn cursor_to_end_of_current_line(&mut self) -> Result<CursorPosition, CursorBounds>;
+}
+
+pub struct BulletContext<'a> {
   pub view: &'a mut Option<ViewState>,
   pub model: &'a mut Editor
 }
 
-impl<'a> BulletApi<'a> {
-
-  pub fn cursor_right(&mut self) -> Result<CursorPosition, CursorBounds> {
+impl<'a> EditorContext for BulletContext<'a> {
+  fn cursor_right(&mut self) -> Result<CursorPosition, CursorBounds> {
     self.cursor_move(Editor::cursor_mv_right, ViewState::cursor_mv_right)
   }
 
-  pub fn cursor_left(&mut self) -> Result<CursorPosition, CursorBounds> {
+  fn cursor_left(&mut self) -> Result<CursorPosition, CursorBounds> {
     self.cursor_move(Editor::cursor_mv_left, ViewState::cursor_mv_left)
   }
 
-  pub fn cursor_down(&mut self) -> Result<CursorPosition, CursorBounds> {
+  fn cursor_down(&mut self) -> Result<CursorPosition, CursorBounds> {
     self.cursor_move(Editor::cursor_mv_down, ViewState::cursor_mv_down)
         .or_else(|err| match err {
           CursorBounds::RowOutOfBounds(_) => 
@@ -28,7 +36,7 @@ impl<'a> BulletApi<'a> {
         })
   }
 
-  pub fn cursor_up(&mut self) -> Result<CursorPosition, CursorBounds> {
+  fn cursor_up(&mut self) -> Result<CursorPosition, CursorBounds> {
     self.cursor_move(Editor::cursor_mv_up, ViewState::cursor_mv_up)
         .or_else(|err| match err {
           CursorBounds::RowOutOfBounds(_) => self.cursor_origin_x(),
@@ -44,9 +52,18 @@ impl<'a> BulletApi<'a> {
         })
   }
 
-  pub fn cursor_origin_x(&mut self) -> Result<CursorPosition, CursorBounds> {
+  fn cursor_origin_x(&mut self) -> Result<CursorPosition, CursorBounds> {
     self.cursor_move(Editor::cursor_origin_x, ViewState::cursor_origin_x)
   }
+
+  fn cursor_to_end_of_current_line(&mut self) -> Result<CursorPosition, CursorBounds> {
+    let current_line_len = self.model.get_current_line().content.len();
+    let new_pos = self.model.cursor_to_end_of_line();
+    new_pos
+  }
+}
+
+impl<'a> BulletContext<'a> {
 
   fn cursor_origin(&mut self) -> Result<CursorPosition, CursorBounds> {
     let active_line = self.model.position.active_line;
@@ -62,11 +79,7 @@ impl<'a> BulletApi<'a> {
     self.cursor_to_end_of_current_line()
   }
 
-  pub fn cursor_to_end_of_current_line(&mut self) -> Result<CursorPosition, CursorBounds> {
-    let current_line_len = self.model.get_current_line().content.len();
-    let new_pos = self.model.cursor_to_end_of_line();
-    new_pos
-  }
+
 
   fn cursor_move<F, G>(&mut self, state_fn: F, view_fn: G) -> Result<CursorPosition, CursorBounds> 
     where F: Fn(&mut Editor) -> Result<CursorPosition, CursorBounds>,
@@ -121,6 +134,10 @@ impl<'a> BulletApi<'a> {
     self.model.content.lines.len()
   }
 
+  pub fn activate_search_menu(&mut self) {
+    self.view.as_mut().unwrap().activate_search_menu();
+  }
+
   pub fn repaint(&mut self) {
     self.view.as_mut().unwrap().repaint(self.model);
   }
@@ -128,7 +145,8 @@ impl<'a> BulletApi<'a> {
 
 #[cfg(test)]
 mod tests {
-  pub use super::BulletApi;
+  pub use super::BulletContext
+;
 
   describe! api {
     it "should be true" {

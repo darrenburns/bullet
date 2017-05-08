@@ -66,10 +66,15 @@ impl EditorScroll {
   }
 }
 
+pub struct SearchBar {
+  pub is_active: bool
+}
+
 pub struct ViewState {
   pub cursor_coords: Coordinate,  
   pub scroll: EditorScroll,
-  pub screen: RustBox
+  pub screen: RustBox,
+  pub search_bar: SearchBar
 }
 
 impl ViewState {
@@ -81,6 +86,7 @@ impl ViewState {
     ViewState {
       cursor_coords: Coordinate {x: 0, y: 0},
       screen: screen,
+      search_bar: SearchBar { is_active: false },
       scroll: Default::default()
     }
   }
@@ -125,6 +131,9 @@ impl ViewState {
     self.cursor_coords.y = latest_state.position.active_line - self.scroll.v_scroll - 1;
     self.screen.clear();
     self.render_info_bar(&latest_state);
+    if self.search_bar.is_active {
+      self.render_search_menu(&latest_state);
+    }
     self.render_lines(&latest_state.content.lines, gutter_width, latest_state.position.active_line);
     self.screen.set_cursor((gutter_width + GUTTER_PAD + self.cursor_coords.x) as isize, self.cursor_coords.y as isize);
     self.screen.present();
@@ -179,6 +188,18 @@ impl ViewState {
       half_screen_width = self.screen.width() / 2
     );
     self.screen.print(0, self.screen.height() - INFO_BAR_HEIGHT, rustbox::RB_BOLD, Color::White, Color::Magenta, &info_bar);
+  }
+
+  pub fn activate_search_menu(&mut self) {
+    self.search_bar.is_active = true;
+  }
+
+  pub fn deactivate_search_menu(&mut self) {
+    self.search_bar.is_active = false;
+  }
+
+  fn render_search_menu(&self, latest_state: &Editor) {
+    self.screen.print(0, self.screen.height() - INFO_BAR_HEIGHT, rustbox::RB_BOLD, Color::White, Color::Magenta, "SEARCH BAR ACTIVE");
   }
 
 }

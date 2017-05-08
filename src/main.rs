@@ -6,8 +6,9 @@ extern crate rustbox;
 
 mod editor;
 mod editor_view;
-mod editor_api;
+mod context;
 mod line_buffer;
+mod widget;
 
 use std::env;
 use std::error::Error;
@@ -15,7 +16,7 @@ use std::default::Default;
 
 use editor::Editor;
 use editor_view::ViewState;
-use editor_api::BulletApi;
+use context::{BulletContext, EditorContext};
 
 use rustbox::Key;
 
@@ -33,49 +34,52 @@ fn main() {
 
 fn main_loop(mut state: Editor, mut view: ViewState) {
 
-  let mut bullet_api: BulletApi = BulletApi {
+  let mut context: BulletContext = BulletContext {
     view: &mut Some(view), 
     model: &mut state
   };
-  bullet_api.repaint();
+  context.repaint();
 
   loop {
 
-    match bullet_api.view.as_mut().unwrap().screen.poll_event(false) {
+    match context.view.as_mut().unwrap().screen.poll_event(false) {
       Ok(rustbox::Event::KeyEvent(key)) => {
 
-        let line_number = bullet_api.model.position.active_line;
+        let line_number = context.model.position.active_line;
 
         match key {
           Key::Ctrl('q') => { break; }
           Key::Ctrl('s') => {
-            bullet_api.save_file();
+            context.save_file();
+          }
+          Key::Ctrl('f') => {
+            context.activate_search_menu();
           }
 
           Key::Right => {
-            bullet_api.cursor_right();
+            context.cursor_right();
           }
           Key::Left => {
-            bullet_api.cursor_left();
+            context.cursor_left();
           }
           Key::Up => {
-            bullet_api.cursor_up();
+            context.cursor_up();
           }
           Key::Down => {
-            bullet_api.cursor_down();
+            context.cursor_down();
           }
           Key::Char(ch) => {
-            let col = bullet_api.model.position.active_col;
-            bullet_api.insert_char(&ch, &line_number, &col);
-            bullet_api.cursor_right();
+            let col = context.model.position.active_col;
+            context.insert_char(&ch, &line_number, &col);
+            context.cursor_right();
           }
           Key::Enter => {
-            bullet_api.insert_line_below();
-            bullet_api.cursor_down();
-            bullet_api.cursor_origin_x();
+            context.insert_line_below();
+            context.cursor_down();
+            context.cursor_origin_x();
           }
           Key::Backspace => {
-            bullet_api.delete_char_back();
+            context.delete_char_back();
           }
           _ => {}
         }
@@ -84,7 +88,7 @@ fn main_loop(mut state: Editor, mut view: ViewState) {
       _ => { }
     }
     
-    bullet_api.repaint();
+    context.repaint();
   }
 }
 
