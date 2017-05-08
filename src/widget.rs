@@ -14,15 +14,12 @@ enum WidgetKey {
 trait WidgetRegistry<T: Widget, S: EditorContext> {
   fn new(context: S) -> Self;
   fn register_widget(&mut self, widget: T);
+  fn activate_widget(&mut self, widget_key: &WidgetKey);
   fn forward_input(&mut self, key: Key);
-  // fn get_active_widget(&self) -> Option<T>;
-  // fn get_widget_by_key(&self, key: &WidgetKey) -> Option<&T>;
-  // fn get_all_widgets(&self) -> Vec<&T>;
 }
 
 #[derive(Clone, Debug)]
 pub struct SimpleWidgetRegistry<T, S> {
-  active_widget: Option<T>,
   widgets: HashMap<WidgetKey, T>,
   context: Rc<S>
 }
@@ -33,7 +30,6 @@ impl<T, S> WidgetRegistry<T, S> for SimpleWidgetRegistry<T, S>
 
   fn new(context: S) -> Self {
     SimpleWidgetRegistry {
-      active_widget: None,
       widgets: HashMap::new(),
       context: Rc::new(context)
     }
@@ -45,12 +41,25 @@ impl<T, S> WidgetRegistry<T, S> for SimpleWidgetRegistry<T, S>
     self.widgets.insert(widget.get_key(), widget);
   }
 
+
+  fn activate_widget(&mut self, widget_key: &WidgetKey) {
+    for (_, widget) in self.widgets.iter_mut() {
+      if widget.get_key() == *widget_key {
+        widget.activate();
+      } else {
+        widget.deactivate();
+      }
+    }
+  }
+
   /// Forwards user input to the active widget, which will handle the
   /// input as it sees fit.
   fn forward_input(&mut self, input: Key) {
-    self.widgets.iter()
-                .filter(|&(name, widg)| widg.is_active())
-                .map(|(name, widg)| widg.handle_input(input));
+    for (_, widget) in self.widgets.iter() {
+      if widget.is_active() {
+        widget.handle_input(input);
+      }
+    }
   }
 
 }
@@ -58,9 +67,12 @@ impl<T, S> WidgetRegistry<T, S> for SimpleWidgetRegistry<T, S>
 trait Widget {
   fn new(key: WidgetKey) -> Self;
   fn get_key(&self) -> WidgetKey;
-  fn handle_input(&self, input: Key);
   fn is_displayed(&self) -> bool;
   fn show(&mut self);
   fn hide(&mut self);
+  fn is_active(&self) -> bool;
+  fn activate(&mut self);
+  fn deactivate(&mut self);
+  fn handle_input(&self, input: Key);
 }
 
