@@ -39,7 +39,7 @@ fn main_loop(mut state: Editor, mut view: ViewState) {
     model: &mut state
   };
   context.repaint();
-
+  
   loop {
 
     match context.view.as_mut().unwrap().screen.poll_event(false) {
