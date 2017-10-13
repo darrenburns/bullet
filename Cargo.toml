@@ -1,13 +1,6 @@
 [package]
 name = "bullet"
 version = "0.1.0"
-authors = ["Darren Burns <darrenb900@gmail.com>"]
+authors = ["Darren Burns <darren.burns@fanduel.com>"]
 
 [dependencies]
-rustbox = "*"
-termbox-sys = "0.2.9"
-quick-error = "1.2.0"
-syntect = "1.3"
-
-[dev-dependencies]
-stainless = "*"
