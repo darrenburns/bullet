@@ -4,3 +4,4 @@ version = "0.1.0"
 authors = ["Darren Burns <darren.burns@fanduel.com>"]
 
 [dependencies]
+rustty = "*"
