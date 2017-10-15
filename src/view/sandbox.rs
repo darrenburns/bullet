@@ -16,8 +16,8 @@ pub fn draw_terminal(term: &mut Terminal) {
         VerticalAlign::Middle,
         0,
     );
-
     main_dialog.window().draw_into(term);
+    term.swap_buffers().unwrap();
 }
 
 fn create_maindlg() -> Dialog {
