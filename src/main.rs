@@ -2,21 +2,29 @@ extern crate rustty;
 
 mod data;
 mod view;
+mod controller; 
 
 use std::fs::File;
+use std::time::Duration;
+
+use data::editor_state::{StateApi, EditorState, CursorPosition, Mode};
+use data::piece_table::PieceTable;
 
 
 fn main() {    
     let mut term = view::terminal::create_terminal();
     
-    let mut file = File::open("test.txt")
+    let file_name = "test.txt";
+
+    let mut file = File::open(file_name)
                         .expect("Unable to open file");
 
-    let piece_table = data::piece_table::PieceTable::new(&mut file);
+    let mut state = EditorState::new(
+        String::from(file_name),
+        Mode::Normal,
+        CursorPosition::default(),
+        PieceTable::new(&mut file),
+    );
     
-    loop {
-        let editor_lines = piece_table.as_lines();
-        view::terminal::draw_cursor(&mut term);
-        view::terminal::draw_terminal(&mut term, editor_lines);
-    }
+    controller::events::event_loop(&mut term, &mut state);
 }

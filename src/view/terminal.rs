@@ -3,6 +3,8 @@ use std::cmp;
 use rustty::{Cell, Terminal, Color, HasSize, Attr};
 use rustty::ui::Painter;
 
+use data::editor_state::EditorState;
+
 const GUTTER_WIDTH: usize = 3;
 const GUTTER_RIGHT_MARGIN: usize = 1;
 
@@ -18,14 +20,19 @@ pub fn create_terminal() -> Terminal {
     return Terminal::new().unwrap();
 }
 
-pub fn draw_terminal(term: &mut Terminal, lines: Vec<&str>) {
+pub fn draw_terminal(term: &mut Terminal, lines: Vec<&str>, state: &EditorState) {
     draw_editor_window(term, lines);
     term.swap_buffers().unwrap();
 }
 
 pub fn draw_cursor(term: &mut Terminal) {
     term.set_cursor(GUTTER_WIDTH, 0).unwrap();
-} 
+}
+
+pub fn clear_and_draw_terminal(term: &mut Terminal) {
+    term.clear().unwrap();
+    term.swap_buffers().unwrap();
+}
 
 // TODO: Encapsulate all editor state into an easily renderable struct
 // Pass state via this object instead of a Vec<&str>
@@ -56,7 +63,7 @@ fn draw_editor_window(term: &mut Terminal, lines: Vec<&str>) {
 }
 
 fn draw_status_line(term: &mut Terminal) {
-    // let terminal_width  = term.size().0;
+    let terminal_width  = term.size().0;
     let terminal_height = term.size().1;
     let status_string = format!("{file} - {x}, {y}", file="Somefile.txt", x=0, y=0);
     term.printline(0, terminal_height - 1, status_string.as_str());
