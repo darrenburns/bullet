@@ -1,10 +1,7 @@
 use std::cmp;
-use std::fmt;
 
-use rustty::{Cell, CellAccessor, Terminal, Color, HasSize, Attr};
-use rustty::ui::{Widget, Painter};
-
-use data::piece_table::PieceTable;
+use rustty::{Cell, Terminal, Color, HasSize, Attr};
+use rustty::ui::Painter;
 
 const GUTTER_WIDTH: usize = 3;
 const GUTTER_RIGHT_MARGIN: usize = 1;
@@ -59,7 +56,7 @@ fn draw_editor_window(term: &mut Terminal, lines: Vec<&str>) {
 }
 
 fn draw_status_line(term: &mut Terminal) {
-    let terminal_width  = term.size().0;
+    // let terminal_width  = term.size().0;
     let terminal_height = term.size().1;
     let status_string = format!("{file} - {x}, {y}", file="Somefile.txt", x=0, y=0);
     term.printline(0, terminal_height - 1, status_string.as_str());

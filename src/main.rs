@@ -3,8 +3,6 @@ extern crate rustty;
 mod data;
 mod view;
 
-use rustty::Terminal;
-
 use std::fs::File;
 
 
