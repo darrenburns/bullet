@@ -7,7 +7,7 @@ use rustty::ui::{Widget, Painter};
 use data::piece_table::PieceTable;
 
 const GUTTER_WIDTH: usize = 3;
-const GUTTER_PADDING: usize = 1;
+const GUTTER_RIGHT_MARGIN: usize = 1;
 
 pub trait Drawable {
     fn draw(&self, canvas: Terminal);
@@ -50,13 +50,11 @@ fn draw_editor_window(term: &mut Terminal, lines: Vec<&str>) {
 
             // Paint the characters.
             for (ch_idx, ch) in line.chars().enumerate() {
-                let screen_ch_idx = ch_idx + GUTTER_WIDTH + GUTTER_PADDING;
+                let screen_ch_idx = ch_idx + GUTTER_WIDTH + GUTTER_RIGHT_MARGIN;
                 term[(screen_ch_idx, y)].set_ch(ch);
             }
 
         }
     }
 
-    // for (i, line) in lines.into_iter().enumerate() {
-    // }
 }
