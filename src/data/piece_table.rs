@@ -17,7 +17,7 @@ struct Piece {
     length: usize,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 enum Source {
     Orig,
     Add
@@ -43,10 +43,11 @@ impl PieceTable {
         }
     }
 
-}
-
-impl Drawable for PieceTable {
-    fn draw<T>(&self, canvas: T) {
-        
+    pub fn as_lines(&self) -> Vec<&str> {
+        // Since we're read for now, we'll just load in the
+        // return the lines of the original file for now,
+        // rather than from the piece table buffers.
+        self.original_file.lines().collect()
     }
+
 }

@@ -1,8 +1,16 @@
-use rustty::{CellAccessor, Terminal, Color, HasSize};
-use rustty::ui::Widget;
+use std::cmp;
+use std::fmt;
+
+use rustty::{Cell, CellAccessor, Terminal, Color, HasSize, Attr};
+use rustty::ui::{Widget, Painter};
+
+use data::piece_table::PieceTable;
+
+const GUTTER_WIDTH: usize = 3;
+const GUTTER_PADDING: usize = 1;
 
 pub trait Drawable {
-    fn draw<T>(&self, canvas: T) where T: Canvas;
+    fn draw(&self, canvas: Terminal);
 }
 
 // Use Canvas trait rather than Terminal to stay implementation agnostic
@@ -13,20 +21,42 @@ pub fn create_terminal() -> Terminal {
     return Terminal::new().unwrap();
 }
 
-pub fn draw_terminal(term: &mut Terminal) {
-    draw_gutter(term);
+pub fn draw_terminal(term: &mut Terminal, lines: Vec<&str>) {
+    draw_editor_window(term, lines);
     term.swap_buffers().unwrap();
 }
 
-fn draw_gutter(term: &mut Terminal) {
-    let mut gutter = Widget::new(1, term.size().1);
+pub fn draw_cursor(term: &mut Terminal) {
+    term.set_cursor(GUTTER_WIDTH, 0).unwrap();
+} 
+
+// TODO: Encapsulate all editor state into an easily renderable struct
+// Pass state via this object instead of a Vec<&str>
+// The file is represented internally as a piece table, but presented
+// to the terminal client as a vector of string slices.
+fn draw_editor_window(term: &mut Terminal, lines: Vec<&str>) {
+    let terminal_height = term.size().1;
     {
-        let mut cells = gutter.cellvec_mut();
-        for cell in cells.iter_mut() {
-            cell.set_ch('X')
-                .set_fg(Color::Black)
-                .set_bg(Color::Magenta);
+        let last_visible_line_index = cmp::min(lines.len(), terminal_height);
+        let visible_lines = lines[..last_visible_line_index].into_iter();
+
+        for (y, line) in visible_lines.enumerate() {
+            let line_number = y + 1;  // TODO: Change it to y + 1 + scroll_offset when scrolling ready
+
+            // Paint the gutter.
+            let gutter_cell = Cell::with_style(Color::Black, Color::Red, Attr::BoldUnderline);
+            let line_number_string = format!("{:>width$}", line_number.to_string(), width=GUTTER_WIDTH);
+            term.printline_with_cell(0, y, line_number_string.as_str(), gutter_cell);
+
+            // Paint the characters.
+            for (ch_idx, ch) in line.chars().enumerate() {
+                let screen_ch_idx = ch_idx + GUTTER_WIDTH + GUTTER_PADDING;
+                term[(screen_ch_idx, y)].set_ch(ch);
+            }
+
         }
     }
-    gutter.draw_into(term);
+
+    // for (i, line) in lines.into_iter().enumerate() {
+    // }
 }
