@@ -4,33 +4,37 @@ use std::collections::HashMap;
 
 use rustty::{Terminal, Event};
 
-use data::editor_state::{StateApi, EditorState};
+use data::editor_state::{StateApi, EditorState, Mode};
+use controller::input::{ModeInputHandler, NavigateModeInputHandler, CommandModeInputHandler, InsertModeInputHandler};
 use view::terminal::*;
 
-struct InputActionMapping {
-    mapping: HashMap<char, Box<BulletCommand>>   
+struct InputModeMultiplexer {
+    mapping: HashMap<Mode, Box<ModeInputHandler>>
 }
 
-impl InputActionMapping {
-    pub fn new() -> InputActionMapping {
-        InputActionMapping {
-            mapping: HashMap::new()
+impl InputModeMultiplexer {
+    pub fn new() -> InputModeMultiplexer {
+        let mut mode_mappings: HashMap<Mode, Box<ModeInputHandler>> = HashMap::new();
+
+        mode_mappings.insert(Mode::Navigate, Box::new(NavigateModeInputHandler{}));
+        mode_mappings.insert(Mode::Command, Box::new(CommandModeInputHandler::new()));
+        mode_mappings.insert(Mode::Insert, Box::new(InsertModeInputHandler{}));
+
+        InputModeMultiplexer {
+            mapping: mode_mappings
         }
     }
 
     pub fn do_action_for_input(&self, input_char: char, state: &mut EditorState, term: &mut Terminal) {
-        if let Some(command) = self.mapping.get(&input_char) {
-            command.execute(state, term)
-        }
-    }
-
-    pub fn add_mapping(&mut self, ch: char, command: Box<BulletCommand>) {
-        self.mapping.insert(ch, command);
+        // We get the correct handler for the node, and forward the input character on to that.
+        // The handler deals with internal state management, command composition etc.
+        let mode_handler = self.mapping.get(&state.get_mode()).unwrap();
+        mode_handler.handle_input(input_char, state);
     }
 
 }
 
-pub struct CommandError {
+struct CommandError {
     message: String,
 }
 
@@ -46,10 +50,26 @@ impl BulletCommand for QuitCommand {
     }
 }
 
-struct AnotherCommand {}
-impl BulletCommand for AnotherCommand {
+struct WriteCommand {}
+impl BulletCommand for WriteCommand {
     fn execute(&self, state: &mut EditorState, terminal: &mut Terminal) {
 
+    }
+}
+
+struct CommandModeBegin {
+    command_buffer: Vec<char>
+}
+impl CommandModeBegin {
+    fn new() -> Self {
+        CommandModeBegin {
+            command_buffer: vec![]
+        }
+    }
+}
+impl BulletCommand for CommandModeBegin {
+    fn execute(&self, state: &mut EditorState, terminal: &mut Terminal) {
+        state.set_mode(Mode::Command);
     }
 }
 
@@ -66,9 +86,13 @@ pub fn event_loop(term: &mut Terminal, state: &mut EditorState) {
     }
 }
 
-fn register_input_action_mapping() -> InputActionMapping {
-    let mut input_action_mapping = InputActionMapping::new();
-    input_action_mapping.add_mapping('q', Box::new(QuitCommand {}));
-    input_action_mapping.add_mapping('w', Box::new(AnotherCommand {}));
+fn register_input_action_mapping() -> InputModeMultiplexer {
+    let mut input_action_mapping = InputModeMultiplexer::new();
+
+    // input_action_mapping.add_mapping(Mode::Command, 'q', Box::new(QuitCommand {}));
+    // input_action_mapping.add_mapping(Mode::Command, 'w', Box::new(WriteCommand {}));
+
+    // input_action_mapping.add_mapping(Mode::Navigate, ';', Box::new(CommandModeBegin::new()));
+
     input_action_mapping
 }

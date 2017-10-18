@@ -1,3 +1,5 @@
+use std::fmt;
+
 use data::piece_table::PieceTable;
 
 pub struct EditorState {
@@ -17,14 +19,24 @@ impl EditorState {
 
         EditorState { file_name, mode, cursor_position, piece_table }
     }
+
+    pub fn set_mode(&mut self, new_mode: Mode) {
+        self.mode = new_mode;
+    }
 }
 
 
 pub trait StateApi {
+    fn get_mode(&self) -> &Mode;
     fn get_editor_lines(&self) -> Vec<&str>;
 }
 
 impl StateApi for EditorState {
+
+    fn get_mode(&self) -> &Mode {
+        &self.mode
+    }
+
     fn get_editor_lines(&self) -> Vec<&str> {
         self.piece_table.as_lines()
     }
@@ -43,7 +55,15 @@ impl Default for CursorPosition {
     }
 }
 
+#[derive(Eq, PartialEq, Hash, Debug)]
 pub enum Mode {
-    Normal,
-    Insert,
+    Navigate,  // Designed for quick navigation of documents.
+    Command,  // Press ':' to enter this mode, enter string to perform command.
+    Insert,  // Press 'i' while in Navigate mode to enter insert mode, for updating files. 
+}
+
+impl fmt::Display for Mode {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Debug::fmt(self, f)
+    }
 }

@@ -3,7 +3,7 @@ use std::cmp;
 use rustty::{Cell, Terminal, Color, HasSize, Attr};
 use rustty::ui::Painter;
 
-use data::editor_state::EditorState;
+use data::editor_state::{StateApi, EditorState};
 
 const GUTTER_WIDTH: usize = 3;
 const GUTTER_RIGHT_MARGIN: usize = 1;
@@ -21,7 +21,7 @@ pub fn create_terminal() -> Terminal {
 }
 
 pub fn draw_terminal(term: &mut Terminal, lines: Vec<&str>, state: &EditorState) {
-    draw_editor_window(term, lines);
+    draw_editor_window(term, lines, state);
     term.swap_buffers().unwrap();
 }
 
@@ -38,7 +38,7 @@ pub fn clear_and_draw_terminal(term: &mut Terminal) {
 // Pass state via this object instead of a Vec<&str>
 // The file is represented internally as a piece table, but presented
 // to the terminal client as a vector of string slices.
-fn draw_editor_window(term: &mut Terminal, lines: Vec<&str>) {
+fn draw_editor_window(term: &mut Terminal, lines: Vec<&str>, state: &EditorState) {
     let terminal_height = term.size().1;
 
     let last_visible_line_index = cmp::min(lines.len(), terminal_height);
@@ -59,12 +59,12 @@ fn draw_editor_window(term: &mut Terminal, lines: Vec<&str>) {
         }
     }
 
-    draw_status_line(term);
+    draw_status_line(term, state);
 }
 
-fn draw_status_line(term: &mut Terminal) {
+fn draw_status_line(term: &mut Terminal, state: &EditorState) {
     let terminal_width  = term.size().0;
     let terminal_height = term.size().1;
-    let status_string = format!("{file} - {x}, {y}", file="Somefile.txt", x=0, y=0);
+    let status_string = format!("{mode} - {x}, {y}", mode=state.get_mode().to_string(), x=0, y=0);
     term.printline(0, terminal_height - 1, status_string.as_str());
 }

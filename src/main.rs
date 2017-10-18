@@ -21,7 +21,7 @@ fn main() {
 
     let mut state = EditorState::new(
         String::from(file_name),
-        Mode::Normal,
+        Mode::Navigate,
         CursorPosition::default(),
         PieceTable::new(&mut file),
     );
