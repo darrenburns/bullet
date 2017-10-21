@@ -85,24 +85,27 @@ fn dec_cursor(dec_by: usize, state: &mut EditorState) {
 }
 
 fn cursor_line_down(num_lines: usize, state: &mut EditorState) {
-    let num_lines = state.get_editor_lines().len();
-    
-    // If we're on the last line, go to the end of the file
     let pos = state.get_cursor_position();
-    let x = pos.x;
-    let y = pos.y;
-    if num_lines > 0 &&  y == num_lines - 1 {
-        let file_len = state.get_file_length_in_chars() - 1;
-        state.cursor_index = file_len - 1;
+    let (x, y) = (pos.x, pos.y);
+    let (num_lines, chars_left_on_line, next_line_len) = {
+        let lines = state.get_editor_lines();
+        let next_line_len = if y + 1 < lines.len() {
+            lines[y+1].len() + 1
+        } else {
+            0
+        };
+        (lines.len(), lines[y].len() - x + 1, next_line_len)
+    };
+    let is_last_line = num_lines > 0 &&  y == num_lines - 1;
+    if is_last_line {
+        state.cursor_to_eof();
     } else {
-        // Otherwise, note how far along the current line we are
-        
-        // Move to the start of the line below (just after the newline)
-        
-        // Add on how far along the line above we were to the cursor index, 
-        // or to the end if this line is shorter
-
-        // Repeat num_lines times???
+        let this_line_len = x + chars_left_on_line;
+        if x > next_line_len && next_line_len < this_line_len {
+            state.cursor_index += chars_left_on_line + next_line_len - 1;
+        } else {
+            state.cursor_index +=  chars_left_on_line + x;
+        }
     }
 
 }

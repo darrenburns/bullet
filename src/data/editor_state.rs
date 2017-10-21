@@ -33,6 +33,7 @@ pub trait StateApi {
     fn get_file_length_in_chars(&self) -> usize;
     fn get_cursor_position(&self) -> CursorPosition;
     fn set_cursor_index(&mut self, new_index: usize);
+    fn cursor_to_eof(&mut self);
 }
 
 // Coordinates of the cursor WITHIN the text (not the screen),
@@ -83,6 +84,11 @@ impl StateApi for EditorState {
 
     fn set_cursor_index(&mut self, new_index: usize) {
         self.cursor_index = new_index;
+    }
+
+    fn cursor_to_eof(&mut self) {
+        let file_len = self.get_file_length_in_chars() - 1;    
+        self.cursor_index = file_len - 1;
     }
 }
 
