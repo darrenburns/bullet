@@ -8,10 +8,10 @@ pub struct PieceTable {
 }
 
 #[derive(Debug)]
-struct Piece {
+pub struct Piece {
     source: Source,
     start: usize,
-    length: usize,
+    pub length: usize,
 }
 
 #[derive(Debug, PartialEq)]
@@ -45,6 +45,10 @@ impl PieceTable {
         // return the lines of the original file for now,
         // rather than from the piece table buffers.
         self.original_file.lines().collect()
+    }
+
+    pub fn get_pieces(&self) -> &Vec<Piece> {
+        &self.pieces
     }
 
 }

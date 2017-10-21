@@ -71,8 +71,7 @@ impl ModeInputHandler for InsertModeInputHandler {
 }
 
 fn mv_cursor_right(state: &mut EditorState) {
-    // Get the position of the cursor in terms of how far into the
-    // piece table we are.
-    let cursor_pos = state.
-
+    if state.cursor_index < state.get_file_length_in_chars() - 2 {
+        state.cursor_index += 1;
+    }
 }

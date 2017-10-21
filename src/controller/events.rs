@@ -80,8 +80,8 @@ pub fn event_loop(term: &mut Terminal, state: &mut EditorState) {
             action_map.do_action_for_input(input_ch, state, term);
         }
         
-        draw_terminal(term, state);
         draw_cursor(term, state);
+        draw_terminal(term, state);
     }
 }
 

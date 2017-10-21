@@ -5,7 +5,7 @@ use data::piece_table::PieceTable;
 pub struct EditorState {
     file_name: String,
     mode: Mode,
-    cursor_index: usize,
+    pub cursor_index: usize,
     piece_table: PieceTable,
 }
 
@@ -30,6 +30,7 @@ pub trait StateApi {
     fn get_mode(&self) -> &Mode;
     fn get_active_file_name(&self) -> &str;
     fn get_editor_lines(&self) -> Vec<&str>;
+    fn get_file_length_in_chars(&self) -> usize;
     fn get_cursor_position(&self) -> CursorPosition;
     fn set_cursor_index(&mut self, new_index: usize);
 }
@@ -37,8 +38,8 @@ pub trait StateApi {
 // Coordinates of the cursor WITHIN the text (not the screen),
 // indexed from 0.
 pub struct CursorPosition {
-    x: usize,
-    y: usize,
+    pub x: usize,
+    pub y: usize,
 }
 
 impl StateApi for EditorState {
@@ -55,19 +56,27 @@ impl StateApi for EditorState {
         self.piece_table.as_lines()
     }
 
+    fn get_file_length_in_chars(&self) -> usize {
+        self.piece_table.get_pieces().iter()
+            .map(|p| p.length)
+            .sum()
+    }
+
     fn get_cursor_position(&self) -> CursorPosition {
-        let lines = self.get_editor_lines();
-        let mut chars_seen_until_line = 0;
         let mut cursor_pos = CursorPosition { x: 0, y: 0 };
+        let lines = self.get_editor_lines();
+        let mut chars_seen = 0;
         for (y, line) in lines.iter().enumerate() {
-            let chars_this_line = line.len() + 1;
-            let total_chars_seen = chars_this_line + chars_seen_until_line;
-            if total_chars_seen >= self.cursor_index {
-                let this_line_offset = total_chars_seen - self.cursor_index;
-                cursor_pos.x = chars_seen_until_line + this_line_offset;
+            // Keep looking at lines, taking note of how many characters we look at
+            let line_len = line.len() + 1;
+            chars_seen += line_len;
+            // If we've seen beyond the cursor index
+            if chars_seen > self.cursor_index {
+                let start_of_line = chars_seen - line_len;
+                cursor_pos.x = self.cursor_index - start_of_line;
                 cursor_pos.y = y;
+                return cursor_pos;
             }
-            chars_seen_until_line += chars_this_line;  // add 1 for new line char
         }
         cursor_pos
     }

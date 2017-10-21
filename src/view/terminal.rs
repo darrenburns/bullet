@@ -26,8 +26,8 @@ pub fn draw_terminal(term: &mut Terminal, state: &EditorState) {
 }
 
 pub fn draw_cursor(term: &mut Terminal, state: &EditorState) {
-    let lines = state.get_editor_lines();
-    term.set_cursor(0, 0).unwrap();
+    let pos = state.get_cursor_position();
+    term.set_cursor(pos.x + GUTTER_WIDTH + GUTTER_RIGHT_MARGIN, pos.y).unwrap();
 }
 
 pub fn clear_and_draw_terminal(term: &mut Terminal) {
@@ -67,7 +67,9 @@ fn draw_editor_window(term: &mut Terminal, state: &EditorState) {
 fn draw_status_line(term: &mut Terminal, state: &EditorState) {
     let terminal_width  = term.size().0;
     let terminal_height = term.size().1;
-    let status_string = format!("{mode} - {x}, {y}", mode=state.get_mode().to_string(), x=0, y=0);
+
+    let pos = state.get_cursor_position();
+    let status_string = format!("{mode} - {x}, {y}, cursor idx = {idx}", mode=state.get_mode().to_string(), x=pos.x, y=pos.y, idx=state.cursor_index);
     term.printline_with_cell(
         0, 
         terminal_height - 1, 
