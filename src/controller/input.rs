@@ -12,7 +12,9 @@ pub struct NavigateModeInputHandler {}
 impl ModeInputHandler for NavigateModeInputHandler {
     fn handle_input(&mut self, input_char: char, state_api: &mut EditorState) {
         match input_char {
-            'l' => mv_cursor_right(state_api),
+            'h' => dec_cursor(1, state_api),
+            'l' => inc_cursor(1, state_api),
+            'j' => cursor_line_down(1, state_api),
             ';' => state_api.set_mode(Mode::Command),
             'q' => {
                 exit(0);
@@ -70,8 +72,37 @@ impl ModeInputHandler for InsertModeInputHandler {
     }
 }
 
-fn mv_cursor_right(state: &mut EditorState) {
+fn inc_cursor(inc_by: usize, state: &mut EditorState) {
     if state.cursor_index < state.get_file_length_in_chars() - 2 {
-        state.cursor_index += 1;
+        state.cursor_index += inc_by;
     }
+}
+
+fn dec_cursor(dec_by: usize, state: &mut EditorState) {
+    if state.cursor_index >= dec_by {
+        state.cursor_index -= dec_by;
+    }
+}
+
+fn cursor_line_down(num_lines: usize, state: &mut EditorState) {
+    let num_lines = state.get_editor_lines().len();
+    
+    // If we're on the last line, go to the end of the file
+    let pos = state.get_cursor_position();
+    let x = pos.x;
+    let y = pos.y;
+    if num_lines > 0 &&  y == num_lines - 1 {
+        let file_len = state.get_file_length_in_chars() - 1;
+        state.cursor_index = file_len - 1;
+    } else {
+        // Otherwise, note how far along the current line we are
+        
+        // Move to the start of the line below (just after the newline)
+        
+        // Add on how far along the line above we were to the cursor index, 
+        // or to the end if this line is shorter
+
+        // Repeat num_lines times???
+    }
+
 }
