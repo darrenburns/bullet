@@ -25,11 +25,11 @@ impl InputModeMultiplexer {
         }
     }
 
-    pub fn do_action_for_input(&self, input_char: char, state: &mut EditorState, term: &mut Terminal) {
+    pub fn do_action_for_input(&mut self, input_char: char, state: &mut EditorState, term: &mut Terminal) {
         // We get the correct handler for the node, and forward the input character on to that.
         // The handler deals with internal state management, command composition etc.
-        let mode_handler = self.mapping.get(&state.get_mode()).unwrap();
-        mode_handler.handle_input(input_char, state);
+        let mode_handler = self.mapping.get_mut(&state.get_mode()).unwrap();
+        mode_handler.handle_input(input_char, state)
     }
 
 }
@@ -74,15 +74,14 @@ impl BulletCommand for CommandModeBegin {
 }
 
 pub fn event_loop(term: &mut Terminal, state: &mut EditorState) {
-    let action_map = register_input_action_mapping();
+    let mut action_map = register_input_action_mapping();
     loop {
         if let Some(Event::Key(input_ch)) = term.get_event(Duration::new(0, 0)).unwrap() {
             action_map.do_action_for_input(input_ch, state, term);
         }
-
-        let editor_lines = state.get_editor_lines();
-        draw_cursor(term);
-        draw_terminal(term, editor_lines, &state);
+        
+        draw_terminal(term, state);
+        draw_cursor(term, state);
     }
 }
 

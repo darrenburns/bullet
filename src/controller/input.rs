@@ -1,4 +1,7 @@
+use std::process::exit;
+
 use data::editor_state::{StateApi, EditorState, Mode};
+use data::io::*;
 
 
 pub trait ModeInputHandler {
@@ -9,7 +12,11 @@ pub struct NavigateModeInputHandler {}
 impl ModeInputHandler for NavigateModeInputHandler {
     fn handle_input(&mut self, input_char: char, state_api: &mut EditorState) {
         match input_char {
+            'l' => mv_cursor_right(state_api),
             ';' => state_api.set_mode(Mode::Command),
+            'q' => {
+                exit(0);
+            }
             _ => (),
         }
         // Handle input in navigation mode here.
@@ -27,6 +34,17 @@ impl CommandModeInputHandler {
             command_buffer: vec![]
         }
     }
+
+    fn process_command_buffer(&mut self, state: &mut EditorState) {
+        for cmd_char in self.command_buffer.iter() {
+            match cmd_char {
+                &'w' => write_file(state),
+                &'q' => exit(0),
+                _ => ()
+            }
+        }
+        self.command_buffer.clear();
+    }
 }
 impl ModeInputHandler for CommandModeInputHandler {
     fn handle_input(&mut self, input_char: char, state_api: &mut EditorState) {
@@ -34,7 +52,11 @@ impl ModeInputHandler for CommandModeInputHandler {
         // When enter is pressed, execute buffered commands and clear buffer.
         // Return to navigate mode.
         match input_char {
-            '\r' => (),  // TODO: Actually process the command string
+            '\r' => {
+                println!("{:?}", self.command_buffer);
+                self.process_command_buffer(state_api);
+                state_api.set_mode(Mode::Navigate);
+            },
             _ => self.command_buffer.push(input_char),
         }
     }
@@ -46,4 +68,11 @@ impl ModeInputHandler for InsertModeInputHandler {
         // Handle input in insertion mode. Will need reference to the StateApi to 
         // update the editor state.
     }
+}
+
+fn mv_cursor_right(state: &mut EditorState) {
+    // Get the position of the cursor in terms of how far into the
+    // piece table we are.
+    let cursor_pos = state.
+
 }

@@ -7,7 +7,7 @@ mod controller;
 use std::fs::File;
 use std::time::Duration;
 
-use data::editor_state::{StateApi, EditorState, CursorPosition, Mode};
+use data::editor_state::{StateApi, EditorState, Mode};
 use data::piece_table::PieceTable;
 
 
@@ -22,7 +22,7 @@ fn main() {
     let mut state = EditorState::new(
         String::from(file_name),
         Mode::Navigate,
-        CursorPosition::default(),
+        0,
         PieceTable::new(&mut file),
     );
     

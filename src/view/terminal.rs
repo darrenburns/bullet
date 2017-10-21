@@ -20,13 +20,14 @@ pub fn create_terminal() -> Terminal {
     return Terminal::new().unwrap();
 }
 
-pub fn draw_terminal(term: &mut Terminal, lines: Vec<&str>, state: &EditorState) {
-    draw_editor_window(term, lines, state);
+pub fn draw_terminal(term: &mut Terminal, state: &EditorState) {
+    draw_editor_window(term, state);
     term.swap_buffers().unwrap();
 }
 
-pub fn draw_cursor(term: &mut Terminal) {
-    term.set_cursor(GUTTER_WIDTH, 0).unwrap();
+pub fn draw_cursor(term: &mut Terminal, state: &EditorState) {
+    let lines = state.get_editor_lines();
+    term.set_cursor(0, 0).unwrap();
 }
 
 pub fn clear_and_draw_terminal(term: &mut Terminal) {
@@ -38,9 +39,10 @@ pub fn clear_and_draw_terminal(term: &mut Terminal) {
 // Pass state via this object instead of a Vec<&str>
 // The file is represented internally as a piece table, but presented
 // to the terminal client as a vector of string slices.
-fn draw_editor_window(term: &mut Terminal, lines: Vec<&str>, state: &EditorState) {
+fn draw_editor_window(term: &mut Terminal, state: &EditorState) {
     let terminal_height = term.size().1;
 
+    let lines = state.get_editor_lines();
     let last_visible_line_index = cmp::min(lines.len(), terminal_height);
     let visible_lines = lines[..last_visible_line_index].into_iter();
 
@@ -48,7 +50,7 @@ fn draw_editor_window(term: &mut Terminal, lines: Vec<&str>, state: &EditorState
         let line_number = y + 1;  // TODO: Change it to y + 1 + scroll_offset when scrolling ready
 
         // Paint the gutter.
-        let gutter_cell = Cell::with_style(Color::Black, Color::Red, Attr::BoldUnderline);
+        let gutter_cell = Cell::with_style(Color::Default, Color::Byte(0x00), Attr::Default);
         let line_number_string = format!("{:>width$}", line_number.to_string(), width=GUTTER_WIDTH);
         term.printline_with_cell(0, y, line_number_string.as_str(), gutter_cell);
 
@@ -66,5 +68,10 @@ fn draw_status_line(term: &mut Terminal, state: &EditorState) {
     let terminal_width  = term.size().0;
     let terminal_height = term.size().1;
     let status_string = format!("{mode} - {x}, {y}", mode=state.get_mode().to_string(), x=0, y=0);
-    term.printline(0, terminal_height - 1, status_string.as_str());
+    term.printline_with_cell(
+        0, 
+        terminal_height - 1, 
+        format!("{status:>width$}", status=status_string, width=terminal_width).as_str(),
+        Cell::with_style(Color::Default, Color::Byte(0x00), Attr::Bold)
+    );
 }
