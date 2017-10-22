@@ -157,6 +157,10 @@ impl StateApi for EditorState {
 
     fn cursor_start_next_word(&mut self) {
         // Get the index of the next whitespace occurring in the slice between current x and EOL
+        let iter = self.piece_table.iter();
+        for ch in iter {
+            print!("char = {}", ch);
+        }
         let cursor_pos = self.get_cursor_position();
         let maybe_whitespace_index = {
             let line = &self.get_editor_lines()[cursor_pos.y][cursor_pos.x..];
@@ -165,7 +169,7 @@ impl StateApi for EditorState {
         if let Some(inc_by) = maybe_whitespace_index {
             self.cursor_index += inc_by + 1;
         } else {
-            self.cursor_end_of_line();  // TODO: Change this.
+
         }
     }
 
