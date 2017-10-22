@@ -13,10 +13,15 @@ pub struct NavigateModeInputHandler {}
 impl ModeInputHandler for NavigateModeInputHandler {
     fn handle_input(&mut self, input_char: char, state_api: &mut EditorState) {
         match input_char {
-            'h' => dec_cursor(1, state_api),
-            'l' => inc_cursor(1, state_api),
-            'j' => cursor_line_down(state_api),
-            'k' => cursor_line_up(state_api),
+            // Basic directional movement
+            'h' => state_api.dec_cursor(1),
+            'l' => state_api.inc_cursor(1),
+            'j' => state_api.cursor_line_down(),
+            'k' => state_api.cursor_line_up(),
+
+            // Content-aware movement
+            'w' => state_api.cursor_start_next_word(),
+
             ';' => state_api.set_mode(Mode::Command),
             'q' => exit(0),
             _ => (),
@@ -72,61 +77,3 @@ impl ModeInputHandler for InsertModeInputHandler {
     }
 }
 
-fn inc_cursor(inc_by: usize, state: &mut EditorState) {
-    if state.cursor_index < state.get_file_length_in_chars() - 2 {
-        state.cursor_index += inc_by;
-    }
-}
-
-fn dec_cursor(dec_by: usize, state: &mut EditorState) {
-    if state.cursor_index >= dec_by {
-        state.cursor_index -= dec_by;
-    }
-}
-
-
-// TODO: Move these into the state API - keep the controller layer as minimal as possible.
-fn cursor_line_down(state: &mut EditorState) {
-    let pos = state.get_cursor_position();
-    let (x, y) = (pos.x, pos.y);
-    let (num_lines, chars_left_on_line, next_line_len) = {
-        let lines = state.get_editor_lines();
-        let next_line_len = if y + 1 < lines.len() {
-            lines[y+1].len() + 1
-        } else {
-            0
-        };
-        (lines.len(), lines[y].len() - x + 1, next_line_len)
-    };
-    let is_last_line = num_lines > 0 &&  y == num_lines - 1;
-    if is_last_line {
-        state.cursor_to_eof();
-    } else {
-        let this_line_len = x + chars_left_on_line;
-        if x > next_line_len && next_line_len < this_line_len {
-            state.cursor_index += chars_left_on_line + next_line_len - 1;
-        } else {
-            state.cursor_index +=  chars_left_on_line + x;
-        }
-    }
-}
-
-fn cursor_line_up(state: &mut EditorState) {
-    let pos = state.get_cursor_position();
-    let (x, y) = (pos.x, pos.y);
-    if y == 0 {
-        state.set_cursor_index(0);
-    } else {
-        let (prev_line_len, this_line_len) = {
-            let lines = state.get_editor_lines();
-            (lines[y-1].len() + 1, lines[y].len() + 1)
-        };
-        if prev_line_len < x {
-            state.cursor_index -= x;
-            state.cursor_index -= 1;
-        } else {
-            state.cursor_index -= x;
-            state.cursor_index -= prev_line_len - x;
-        }
-    }
-}

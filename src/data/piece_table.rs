@@ -51,4 +51,30 @@ impl PieceTable {
         &self.pieces
     }
 
+    pub fn iter(&self) -> PieceTableIterator {
+        PieceTableIterator {
+            char_index: 0, piece_index: 0, piece_table: self
+        }
+    }
+
+}
+
+pub struct PieceTableIterator<'a> {
+    char_index: usize,
+    piece_index: usize,
+    piece_table: &'a PieceTable
+}
+
+impl<'a> Iterator for PieceTableIterator<'a> {
+    type Item = char;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let current_piece = self.piece_table.get_pieces().get(self.piece_index);
+        // let 
+
+        Some('h')
+
+        
+    }
+
 }
