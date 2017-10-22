@@ -1,3 +1,4 @@
+use std::cmp;
 use std::process::exit;
 
 use data::editor_state::{StateApi, EditorState, Mode};
@@ -14,11 +15,10 @@ impl ModeInputHandler for NavigateModeInputHandler {
         match input_char {
             'h' => dec_cursor(1, state_api),
             'l' => inc_cursor(1, state_api),
-            'j' => cursor_line_down(1, state_api),
+            'j' => cursor_line_down(state_api),
+            'k' => cursor_line_up(state_api),
             ';' => state_api.set_mode(Mode::Command),
-            'q' => {
-                exit(0);
-            }
+            'q' => exit(0),
             _ => (),
         }
         // Handle input in navigation mode here.
@@ -84,7 +84,9 @@ fn dec_cursor(dec_by: usize, state: &mut EditorState) {
     }
 }
 
-fn cursor_line_down(num_lines: usize, state: &mut EditorState) {
+
+// TODO: Move these into the state API - keep the controller layer as minimal as possible.
+fn cursor_line_down(state: &mut EditorState) {
     let pos = state.get_cursor_position();
     let (x, y) = (pos.x, pos.y);
     let (num_lines, chars_left_on_line, next_line_len) = {
@@ -107,5 +109,25 @@ fn cursor_line_down(num_lines: usize, state: &mut EditorState) {
             state.cursor_index +=  chars_left_on_line + x;
         }
     }
+}
 
+fn cursor_line_up(state: &mut EditorState) {
+    let pos = state.get_cursor_position();
+    let (x, y) = (pos.x, pos.y);
+    if y == 0 {
+        state.set_cursor_index(0);
+    } else {
+        let (prev_line_len, this_line_len) = {
+            let lines = state.get_editor_lines();
+            (lines[y-1].len() + 1, lines[y].len() + 1)
+        };
+        if prev_line_len >= this_line_len {
+            println!("{}, {}", prev_line_len, this_line_len);
+            state.cursor_index -= x;
+            state.cursor_index -= prev_line_len - x;
+
+        } else {
+
+        }
+    }
 }
