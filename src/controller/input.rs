@@ -121,13 +121,12 @@ fn cursor_line_up(state: &mut EditorState) {
             let lines = state.get_editor_lines();
             (lines[y-1].len() + 1, lines[y].len() + 1)
         };
-        if prev_line_len >= this_line_len {
-            println!("{}, {}", prev_line_len, this_line_len);
+        if prev_line_len < x {
+            state.cursor_index -= x;
+            state.cursor_index -= 1;
+        } else {
             state.cursor_index -= x;
             state.cursor_index -= prev_line_len - x;
-
-        } else {
-
         }
     }
 }
