@@ -65,6 +65,7 @@ impl PieceTable {
 
 }
 
+#[derive(Debug)]
 pub struct PieceTableIterator<'a> {
     char_offset: usize,
     back_offset: usize,  // Backwards offset for DoubleEndedIterator, back_offset=0 means last char in piece

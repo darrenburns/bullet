@@ -166,15 +166,14 @@ impl StateApi for EditorState {
     }
 
     fn cursor_start_prev_word(&mut self) {
-        // 
-        // self.piece_table.iter()
-        //                 .take(self.cursor_index)
-        //                 .enumerate()
-                        // .;
-                        // .rposition(|ch| ch.is_whitespace())
-                        // .take_while(|ch| !ch.is_whitespace)
-
-
+        let chars_to_take = if self.cursor_index > 0 { self.cursor_index - 1 } else { 0 };
+        self.cursor_index = self.piece_table.iter()
+                                            .take(chars_to_take)
+                                            .enumerate()
+                                            .filter(|&(_, ch)| ch.is_whitespace())
+                                            .last()
+                                            .map(|(whitespace_idx, _)| whitespace_idx + 1)
+                                            .unwrap_or(0);
     }
 
     fn cursor_end_of_line(&mut self) {
