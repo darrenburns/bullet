@@ -94,8 +94,7 @@ impl StateApi for EditorState {
     }
 
     fn cursor_to_eof(&mut self) {
-        let file_len = self.get_file_length_in_chars() - 1;    
-        self.cursor_index = file_len - 1;
+        self.cursor_index = self.piece_table.iter().count()
     }
 
     fn inc_cursor(&mut self, inc_by: usize) {
