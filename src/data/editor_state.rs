@@ -156,9 +156,6 @@ impl StateApi for EditorState {
     }
 
     fn cursor_start_next_word(&mut self) {
-        // println!("cursor_idx={}", self.cursor_index);
-        // let within_bounds = self.cursor_index < self.piece_table.iter().count();
-        // let skip_until = if self.cursor_index > 0 { self.cursor_index } else { 0 };
         let cursor_within_bounds = self.cursor_index < self.piece_table.iter().count() - 1;
         if cursor_within_bounds {
             self.cursor_index += self.piece_table.iter()
