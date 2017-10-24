@@ -166,7 +166,15 @@ impl StateApi for EditorState {
     }
 
     fn cursor_start_prev_word(&mut self) {
-        
+        // 
+        // self.piece_table.iter()
+        //                 .take(self.cursor_index)
+        //                 .enumerate()
+                        // .;
+                        // .rposition(|ch| ch.is_whitespace())
+                        // .take_while(|ch| !ch.is_whitespace)
+
+
     }
 
     fn cursor_end_of_line(&mut self) {
