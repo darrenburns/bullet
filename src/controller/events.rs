@@ -79,19 +79,12 @@ pub fn event_loop(term: &mut Terminal, state: &mut EditorState) {
         if let Some(Event::Key(input_ch)) = term.get_event(Duration::new(0, 0)).unwrap() {
             action_map.do_action_for_input(input_ch, state, term);
         }
-        
+
         draw_cursor(term, state);
         draw_terminal(term, state);
     }
 }
 
 fn register_input_action_mapping() -> InputModeMultiplexer {
-    let mut input_action_mapping = InputModeMultiplexer::new();
-
-    // input_action_mapping.add_mapping(Mode::Command, 'q', Box::new(QuitCommand {}));
-    // input_action_mapping.add_mapping(Mode::Command, 'w', Box::new(WriteCommand {}));
-
-    // input_action_mapping.add_mapping(Mode::Navigate, ';', Box::new(CommandModeBegin::new()));
-
-    input_action_mapping
+    InputModeMultiplexer::new()
 }

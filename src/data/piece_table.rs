@@ -46,6 +46,22 @@ impl PieceTable {
         // Since we're read for now, we'll just load in the
         // return the lines of the original file for now,
         // rather than from the piece table buffers.
+
+        // I would like to do something a little more complex here -
+        // return a Vec of characters wrapped in some Struct which
+        // indicates the source buffer of the character. This can then
+        // be read by the client, and we can display characters from
+        // the original file buffer in a different colour from the 
+        // characters from the add buffer.
+
+        // Perhaps it would also make sense to move the logic for 
+        // returning this struct into a dedicated DebugIterator for piece
+        // tables, which returns wrapped chars as opposed to the standard
+        // Iterator implementation.
+
+        // It would also make sense to get rid of this method in general
+        // and just give the front-end access to the Iterator/DebugIterator,
+        // which it can use to display the content as required.
         self.original_file.lines().collect()
     }
 

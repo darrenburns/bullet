@@ -74,6 +74,6 @@ fn draw_status_line(term: &mut Terminal, state: &EditorState) {
         0, 
         terminal_height - 1, 
         format!("{status:>width$}", status=status_string, width=terminal_width).as_str(),
-        Cell::with_style(Color::Default, Color::Byte(0x00), Attr::Bold)
+        Cell::with_style(Color::Default, Color::Byte(0x01), Attr::Bold)
     );
 }
