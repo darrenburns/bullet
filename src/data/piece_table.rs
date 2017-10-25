@@ -62,6 +62,15 @@ impl PieceTable {
         // It would also make sense to get rid of this method in general
         // and just give the front-end access to the Iterator/DebugIterator,
         // which it can use to display the content as required.
+
+        // Note this comment from the syntect documentation example `syncat`:
+        // We use read_line instead of `for line in highlighter.reader.lines()` because that
+        // doesn't return strings with a `\n`, and including the `\n` gets us more robust highlighting.
+        // See the documentation for `SyntaxSet::load_syntaxes`.
+        // It also allows re-using the line buffer, which should be a tiny bit faster.
+
+        // Maybe we return something which implements the Reader trait, and pass that
+        // to syntect?
         self.original_file.lines().collect()
     }
 
