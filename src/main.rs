@@ -1,4 +1,5 @@
 extern crate rustty;
+extern crate syntect;
 
 mod data;
 mod view;
@@ -7,6 +8,10 @@ mod controller;
 use std::fs::File;
 use std::time::Duration;
 
+use syntect::easy::HighlightLines;
+use syntect::highlighting::{Theme, ThemeSet, Style};
+use syntect::parsing::SyntaxSet;
+
 use data::editor_state::{StateApi, EditorState, Mode};
 use data::piece_table::PieceTable;
 
@@ -14,7 +19,7 @@ use data::piece_table::PieceTable;
 fn main() {    
     let mut term = view::terminal::create_terminal();
     
-    let file_name = "test.txt";
+    let file_name = "test_file.py";
 
     let mut file = File::open(file_name)
                         .expect("Unable to open file");
@@ -25,6 +30,15 @@ fn main() {
         0,
         PieceTable::new(&mut file),
     );
+
+    // Syntax highlighting stuff
+    let syntax_set = SyntaxSet::load_defaults_newlines();
+    let theme_set = ThemeSet::load_defaults();
+
+    let theme = theme_set.themes.get("Solarized (dark)").unwrap();
+
+    let syntax = syntax_set.find_syntax_by_extension("py").unwrap();
+    let mut highlighter = HighlightLines::new(syntax, theme);
     
-    controller::events::event_loop(&mut term, &mut state);
+    controller::events::event_loop(&mut term, &mut highlighter, &mut state);
 }

@@ -3,6 +3,7 @@ use std::time::Duration;
 use std::collections::HashMap;
 
 use rustty::{Terminal, Event};
+use syntect::easy::HighlightLines;
 
 use data::editor_state::{StateApi, EditorState, Mode};
 use controller::input::{ModeInputHandler, NavigateModeInputHandler, CommandModeInputHandler, InsertModeInputHandler};
@@ -73,7 +74,7 @@ impl BulletCommand for CommandModeBegin {
     }
 }
 
-pub fn event_loop(term: &mut Terminal, state: &mut EditorState) {
+pub fn event_loop(term: &mut Terminal, highlighter: &mut HighlightLines, state: &mut EditorState) {
     let mut action_map = register_input_action_mapping();
     loop {
         if let Some(Event::Key(input_ch)) = term.get_event(Duration::new(0, 0)).unwrap() {
@@ -81,7 +82,7 @@ pub fn event_loop(term: &mut Terminal, state: &mut EditorState) {
         }
         
         draw_cursor(term, state);
-        draw_terminal(term, state);
+        draw_terminal(term, highlighter, state);
     }
 }
 

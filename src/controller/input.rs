@@ -22,6 +22,7 @@ impl ModeInputHandler for NavigateModeInputHandler {
             // Content-aware movement
             'w' => state_api.cursor_start_next_word(),
             'b' => state_api.cursor_start_prev_word(),
+            '$' => state_api.cursor_end_of_line(),
 
             ';' => state_api.set_mode(Mode::Command),
             'q' => exit(0),

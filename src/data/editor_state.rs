@@ -39,8 +39,11 @@ pub trait StateApi {
     fn cursor_line_down(&mut self);
     fn cursor_line_up(&mut self);
     fn cursor_start_next_word(&mut self);
-    fn cursor_start_prev_word(&mut self);
+    fn cursor_start_prev_word(&mut self);  // See note about common logic @ implementations
+    fn cursor_start_of_line(&mut self);
     fn cursor_end_of_line(&mut self);
+    // Add function for going to first match before, first match after index given a Predicate
+    // Add function for going to matching parens
 }
 
 // Coordinates of the cursor WITHIN the text (not the screen),
@@ -164,6 +167,10 @@ impl StateApi for EditorState {
         }
     }
 
+    // TODO: Extract logic from following 2 functions into a new function that takes
+    // a Predicate argument (FnMut(Self::Item) -> Option<B>), and finds the first match
+    // of the predicate before the cursor index. Do the same for the first match after
+    // the cursor index.
     fn cursor_start_prev_word(&mut self) {
         let chars_to_take = if self.cursor_index > 0 { self.cursor_index - 1 } else { 0 };
         self.cursor_index = self.piece_table.iter()
@@ -175,13 +182,22 @@ impl StateApi for EditorState {
                                             .unwrap_or(0);
     }
 
+    fn cursor_start_of_line(&mut self) {
+        let chars_to_take = if self.cursor_index > 0 { self.cursor_index - 1 } else { 0 };
+        self.piece_table.iter()
+                        .take(chars_to_take)
+                        .enumerate()
+                        .filter(|&(_, ch)| ch == '\n')
+                        .last()
+                        .map(|(newline_idx, _)| newline_idx + 1)
+                        .unwrap_or(0);
+    }
+
     fn cursor_end_of_line(&mut self) {
-        let cursor_pos = self.get_cursor_position();
-        let num_chars_to_right_of_cursor = {
-            let line = self.get_editor_lines()[cursor_pos.y];
-            line.len() - cursor_pos.x + 1
-        };
-        self.cursor_index += num_chars_to_right_of_cursor;
+        self.cursor_index += self.piece_table.iter()
+                                             .skip(self.cursor_index)
+                                             .take_while(|ch| *ch != '\n')
+                                             .count();
     }
 
 }

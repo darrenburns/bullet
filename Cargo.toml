@@ -4,4 +4,5 @@ version = "0.1.0"
 authors = ["Darren Burns <darren.burns@fanduel.com>"]
 
 [dependencies]
-rustty = "*"
+rustty = "0.1.12"
+syntect = "1.8.0"
