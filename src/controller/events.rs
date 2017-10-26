@@ -77,10 +77,11 @@ impl BulletCommand for CommandModeBegin {
 pub fn event_loop(term: &mut Terminal, highlighter: &mut HighlightLines, state: &mut EditorState) {
     let mut action_map = register_input_action_mapping();
     loop {
-        if let Some(Event::Key(input_ch)) = term.get_event(Duration::new(0, 0)).unwrap() {
+        if let Some(Event::Key(input_ch)) = term.get_event(Duration::from_secs(1)).unwrap() {
             action_map.do_action_for_input(input_ch, state, term);
         }
 
+        
         draw_cursor(term, state);
         draw_terminal(term, highlighter, state);
     }
