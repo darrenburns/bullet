@@ -1,4 +1,5 @@
 use std::fmt;
+use std::cmp;
 
 use data::piece_table::PieceTable;
 
@@ -80,7 +81,7 @@ impl StateApi for EditorState {
         let mut chars_seen = 0;
         for (y, line) in lines.iter().enumerate() {
             // Keep looking at lines, taking note of how many characters we look at
-            let line_len = line.len() + 1;
+            let line_len = line.len();
             chars_seen += line_len;
             // If we've seen beyond the cursor index
             if chars_seen > self.cursor_index {
@@ -98,11 +99,11 @@ impl StateApi for EditorState {
     }
 
     fn cursor_to_eof(&mut self) {
-        self.cursor_index = self.piece_table.iter().count()
+        self.cursor_index = self.get_file_length_in_chars() - 1
     }
 
     fn inc_cursor(&mut self, inc_by: usize) {
-        if self.cursor_index < self.get_file_length_in_chars() - 2 {
+        if self.cursor_index < self.get_file_length_in_chars() - 1 {
             self.cursor_index += inc_by;
         }
     }
@@ -119,11 +120,11 @@ impl StateApi for EditorState {
         let (num_lines, chars_left_on_line, next_line_len) = {
             let lines = self.get_editor_lines();
             let next_line_len = if y + 1 < lines.len() {
-                lines[y+1].len() + 1
+                lines[y+1].len()
             } else {
                 0
             };
-            (lines.len(), lines[y].len() - x + 1, next_line_len)
+            (lines.len(), lines[y].len() - x, next_line_len)
         };
         let is_last_line = num_lines > 0 &&  y == num_lines - 1;
         if is_last_line {
@@ -146,7 +147,7 @@ impl StateApi for EditorState {
         } else {
             let (prev_line_len, this_line_len) = {
                 let lines = self.get_editor_lines();
-                (lines[y-1].len() + 1, lines[y].len() + 1)
+                (lines[y-1].len() , lines[y].len())
             };
             if prev_line_len < x {
                 self.cursor_index -= x;
@@ -159,13 +160,14 @@ impl StateApi for EditorState {
     }
 
     fn cursor_start_next_word(&mut self) {
-        let cursor_within_bounds = self.cursor_index < self.piece_table.iter().count() - 1;
-        if cursor_within_bounds {
-            self.cursor_index += self.piece_table.iter()
-                                                 .skip(self.cursor_index)
-                                                 .take_while(|ch| !ch.is_whitespace())
-                                                 .count() + 1;
-        }
+        let increment_by = self.piece_table.iter()
+                                           .skip(self.cursor_index)
+                                           .take_while(|ch| !ch.is_whitespace())
+                                           .count() + 1;
+                                           
+        let last_index = self.get_file_length_in_chars() - 1;
+        let indices_to_eof = last_index - self.cursor_index;
+        self.cursor_index += cmp::min(increment_by, indices_to_eof);
     }
 
     // TODO: Extract logic from following 2 functions into a new function that takes

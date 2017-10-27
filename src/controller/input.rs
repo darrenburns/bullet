@@ -2,6 +2,7 @@ use std::cmp;
 use std::process::exit;
 
 use termion::event::{Event, Key};
+use termion::clear;
 
 use data::editor_state::{StateApi, EditorState, Mode};
 use data::io::*;

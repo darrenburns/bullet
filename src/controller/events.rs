@@ -29,7 +29,7 @@ impl InputModeMultiplexer {
     }
 
     pub fn do_action_for_input(&mut self, event: Event, state: &mut EditorState) {
-        // We get the correct handler for the mode, and forward the input character on to that.
+        // We get the correct handler for the node, and forward the input character on to that.
         // The handler deals with internal state management, command composition etc.
         let mode_handler = self.mapping.get_mut(&state.get_mode()).unwrap();
         mode_handler.handle_input(event, state)
