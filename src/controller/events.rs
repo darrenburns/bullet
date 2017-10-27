@@ -1,8 +1,9 @@
-use std::process::exit;
-use std::time::Duration;
 use std::collections::HashMap;
+use std::io::{stdin, stdout};
 
-use rustty::{Terminal, Event};
+use termion::raw::IntoRawMode;
+use termion::input::TermRead;
+
 use syntect::easy::HighlightLines;
 
 use data::editor_state::{StateApi, EditorState, Mode};
@@ -26,7 +27,7 @@ impl InputModeMultiplexer {
         }
     }
 
-    pub fn do_action_for_input(&mut self, input_char: char, state: &mut EditorState, term: &mut Terminal) {
+    pub fn do_action_for_input(&mut self, input_char: char, state: &mut EditorState) {
         // We get the correct handler for the node, and forward the input character on to that.
         // The handler deals with internal state management, command composition etc.
         let mode_handler = self.mapping.get_mut(&state.get_mode()).unwrap();
@@ -39,52 +40,42 @@ struct CommandError {
     message: String,
 }
 
-trait BulletCommand {
-    fn execute(&self, state: &mut EditorState, terminal: &mut Terminal);
-}
 
-struct QuitCommand {}
-impl BulletCommand for QuitCommand {
-    fn execute(&self, state: &mut EditorState, terminal: &mut Terminal) {
-        clear_and_draw_terminal(terminal);
-        exit(0);
-    }
-}
-
-struct WriteCommand {}
-impl BulletCommand for WriteCommand {
-    fn execute(&self, state: &mut EditorState, terminal: &mut Terminal) {
-
-    }
-}
-
-struct CommandModeBegin {
-    command_buffer: Vec<char>
-}
-impl CommandModeBegin {
-    fn new() -> Self {
-        CommandModeBegin {
-            command_buffer: vec![]
-        }
-    }
-}
-impl BulletCommand for CommandModeBegin {
-    fn execute(&self, state: &mut EditorState, terminal: &mut Terminal) {
-        state.set_mode(Mode::Command);
-    }
-}
-
-pub fn event_loop(term: &mut Terminal, highlighter: &mut HighlightLines, state: &mut EditorState) {
+pub fn event_loop(highlighter: &mut HighlightLines, state: &mut EditorState) {
     let mut action_map = register_input_action_mapping();
+    
+    let mut out = stdout().into_raw_mode().unwrap();
+    clear_screen(&mut out);
+    render(&mut out, highlighter, state);
     loop {
-        if let Some(Event::Key(input_ch)) = term.get_event(Duration::from_secs(1)).unwrap() {
-            action_map.do_action_for_input(input_ch, state, term);
-        }
+        let mut events = stdin().events();
 
-        
-        draw_cursor(term, state);
-        draw_terminal(term, highlighter, state);
+        if let Some(event) = events.next() {
+            break;  // Press any key to exit for now
+        }
+        render(&mut out, highlighter, state);
     }
+    // loop {
+    //     if let Some(event) = stdin.events().next() {
+    //         let ev = event.unwrap();
+    //     }
+    //     let mut out = BufWriter::new(stdout());
+    //     render(&mut out, highlighter, state);
+    // }
+
+    // for event in stdin.events() {
+    //     println!("{}Red", color::Fg(color::Red));
+    //     match event {
+    //         _ => println!("Event - {:?}", event)
+    //     // }
+    //     // action_map.do_action_for_input(input_ch, state);
+
+    //     // draw_cursor(state);
+    //     // draw_terminal(highlighter, state);
+    //     }
+    // }
+
+
 }
 
 fn register_input_action_mapping() -> InputModeMultiplexer {

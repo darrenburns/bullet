@@ -42,7 +42,7 @@ impl PieceTable {
         }
     }
 
-    pub fn as_lines(&self) -> Vec<&str> {
+    pub fn as_lines(&self) -> Vec<String> {
         // Since we're read for now, we'll just load in the
         // return the lines of the original file for now,
         // rather than from the piece table buffers.
@@ -71,7 +71,9 @@ impl PieceTable {
 
         // Maybe we return something which implements the Reader trait, and pass that
         // to syntect?
-        self.original_file.lines().collect()
+        self.original_file.lines()
+            .map(|line| line.to_string() + "\n")
+            .collect()
     }
 
     pub fn get_pieces(&self) -> &Vec<Piece> {

@@ -29,7 +29,7 @@ impl EditorState {
 pub trait StateApi {
     fn get_mode(&self) -> &Mode;
     fn get_active_file_name(&self) -> &str;
-    fn get_editor_lines(&self) -> Vec<&str>;
+    fn get_editor_lines(&self) -> Vec<String>;
     fn get_file_length_in_chars(&self) -> usize;
     fn get_cursor_position(&self) -> CursorPosition;
     fn set_cursor_index(&mut self, new_index: usize);
@@ -63,7 +63,7 @@ impl StateApi for EditorState {
         &self.file_name
     }
 
-    fn get_editor_lines(&self) -> Vec<&str> {
+    fn get_editor_lines(&self) -> Vec<String> {
         self.piece_table.as_lines()
     }
 
