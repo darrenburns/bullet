@@ -28,7 +28,7 @@ pub fn render<W: Write>(out: &mut W, highlighter: &mut HighlightLines, state: &E
     let (width, height) = terminal_size().unwrap();
     draw_gutter_and_lines(out, highlighter, state);
     draw_status_line(out, height as usize, width as usize, state);
-
+    draw_cursor(out, state);
     out.flush();
 }
 
@@ -92,5 +92,15 @@ fn draw_status_line<W: Write>(out: &mut W, term_height: usize, term_width: usize
         lhs=left_side,
         rhs=right_side,
         pad=cols_remaining_after_left,
+    );
+}
+
+fn draw_cursor<W: Write>(out: &mut W, state: &EditorState) {
+    let cursor_position = state.get_cursor_position();
+    let total_gutter_offset = GUTTER_WIDTH + GUTTER_RIGHT_MARGIN;
+    write!(
+        out,
+        "{}",
+        cursor::Goto((cursor_position.x + total_gutter_offset) as u16, cursor_position.y as u16 + 1),
     );
 }
