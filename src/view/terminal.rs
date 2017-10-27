@@ -74,9 +74,10 @@ fn draw_status_line<W: Write>(out: &mut W, term_height: usize, term_width: usize
 
     let cursor_pos = state.get_cursor_position();
     let right_side = format!(
-        "Ln {ln}, Col {col} | {file_type}",
+        "Ln {ln}, Col {col}, Idx {idx} | {file_type}",
         ln=cursor_pos.y + 1,
         col=cursor_pos.x + 1,
+        idx=state.cursor_index,
         file_type = "Python"
     );
 
@@ -84,7 +85,7 @@ fn draw_status_line<W: Write>(out: &mut W, term_height: usize, term_width: usize
     let cols_remaining_after_left = term_width - left_side.len();
     write!(
         out,
-        "{goto_bottom}{clear_line}{fg}{bg}{lhs}{rhs:>pad$}",
+        "{goto_bottom}{clear_line}{fg}{bg}{lhs}{rhs:>pad$}{reset}",
         goto_bottom=cursor::Goto(1, term_height as u16),
         clear_line=clear::CurrentLine,
         fg=color::Fg(color::Rgb(95, 110, 109)),
@@ -92,6 +93,7 @@ fn draw_status_line<W: Write>(out: &mut W, term_height: usize, term_width: usize
         lhs=left_side,
         rhs=right_side,
         pad=cols_remaining_after_left,
+        reset=style::Reset,
     );
 }
 

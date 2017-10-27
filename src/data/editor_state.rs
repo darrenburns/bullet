@@ -48,6 +48,7 @@ pub trait StateApi {
 
 // Coordinates of the cursor WITHIN the text (not the screen),
 // indexed from 0.
+#[derive(Debug)]
 pub struct CursorPosition {
     pub x: usize,
     pub y: usize,
