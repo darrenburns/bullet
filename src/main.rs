@@ -18,6 +18,7 @@ use syntect::parsing::SyntaxSet;
 
 use data::editor_state::{StateApi, EditorState, Mode};
 use data::piece_table::PieceTable;
+use controller::events::InputModeMultiplexer;
 
 
 fn main() {    
@@ -33,6 +34,7 @@ fn main() {
         Mode::Navigate,
         0,
         PieceTable::new(&mut file),
+        vec![]
     );
 
     // Syntax highlighting stuff

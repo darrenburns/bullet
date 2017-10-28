@@ -66,10 +66,12 @@ fn draw_gutter_for_line_number<W: Write>(out: &mut W, line_number: usize) {
 fn draw_status_line<W: Write>(out: &mut W, term_height: usize, term_width: usize, state: &EditorState) {
     //  Editing: {{file_name}} | Mode: Navigate                 Ln 66, Col 68 | Python
 
+    let mode_input_buf: String = state.get_mode_input_buffer().into_iter().collect();
+    let mode_text = format!("{} ({})", state.get_mode(), mode_input_buf);
     let left_side = format!(
         "Editing: {file_name} | Mode: {mode}",
         file_name=state.get_active_file_name(),
-        mode=state.get_mode()
+        mode=mode_text
     );
 
     let cursor_pos = state.get_cursor_position();

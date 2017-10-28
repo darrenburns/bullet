@@ -1,4 +1,38 @@
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam at egestas
-augue. Aliquam in pretium erat. Aenean a augue sagittis ipsum tincidunt imperdiet 
-vel at nisl. Vestibulum rutrum sodales est. Integer lacinia faucibus scelerisque. 
-Donec est enim, hendrerit quis scelerisque in, sagittis a enim.
+from functools import partial
+
+
+
+names = ['raymond', 'rachel', 'matthew', 'roger',
+
+         'betty', 'melissa', 'judith', 'charlie']
+
+
+
+# In this example, we're grouping by name length
+
+d = {}
+
+for name in names:
+
+    key = len(name)
+
+    if key not in d:
+
+        d[key] = []
+
+    d[key].append(name)
+
+
+
+# {5: ['roger', 'betty'], 6: ['rachel', 'judith'], 7: ['raymond', 'matthew', 'melissa', 'charlie']}
+
+
+
+d = {}
+
+for name in names:
+
+    key = len(name)
+
+    d.setdefault(key, []).append(name)
+

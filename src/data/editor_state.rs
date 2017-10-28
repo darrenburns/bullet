@@ -1,24 +1,29 @@
 use std::fmt;
 use std::cmp;
 
+use termion::event::Event;
+
 use data::piece_table::PieceTable;
+use controller::events::InputModeMultiplexer;
 
 pub struct EditorState {
     file_name: String,
     mode: Mode,
     pub cursor_index: usize,
     piece_table: PieceTable,
+    pub mode_input_buffer: Vec<char>,
 }
 
 impl EditorState {
     pub fn new(
         file_name: String,
-        mode: Mode, 
+        mode: Mode,
         cursor_index: usize,
-        piece_table: PieceTable
+        piece_table: PieceTable,
+        mode_input_buffer: Vec<char>
     ) -> Self {
 
-        EditorState { file_name, mode, cursor_index, piece_table }
+        EditorState { file_name, mode, cursor_index, piece_table, mode_input_buffer }
     }
 
     pub fn set_mode(&mut self, new_mode: Mode) {
@@ -29,14 +34,15 @@ impl EditorState {
 
 pub trait StateApi {
     fn get_mode(&self) -> &Mode;
+    fn get_mode_input_buffer(&self) -> &Vec<char>;
     fn get_active_file_name(&self) -> &str;
     fn get_editor_lines(&self) -> Vec<String>;
     fn get_file_length_in_chars(&self) -> usize;
     fn get_cursor_position(&self) -> CursorPosition;
     fn set_cursor_index(&mut self, new_index: usize);
     fn cursor_to_eof(&mut self);
-    fn inc_cursor(&mut self, inc_by: usize);
-    fn dec_cursor(&mut self, dec_by: usize);
+    fn inc_cursor(&mut self);
+    fn dec_cursor(&mut self);
     fn cursor_line_down(&mut self);
     fn cursor_line_up(&mut self);
     fn cursor_start_next_word(&mut self);
@@ -59,6 +65,10 @@ impl StateApi for EditorState {
 
     fn get_mode(&self) -> &Mode {
         &self.mode
+    }
+
+    fn get_mode_input_buffer(&self) -> &Vec<char> {
+        &self.mode_input_buffer
     }
 
     fn get_active_file_name(&self) -> &str {
@@ -102,15 +112,15 @@ impl StateApi for EditorState {
         self.cursor_index = self.get_file_length_in_chars() - 1
     }
 
-    fn inc_cursor(&mut self, inc_by: usize) {
+    fn inc_cursor(&mut self) {
         if self.cursor_index < self.get_file_length_in_chars() - 1 {
-            self.cursor_index += inc_by;
+            self.cursor_index += 1;
         }
     }
 
-    fn dec_cursor(&mut self, dec_by: usize) {
-        if self.cursor_index >= dec_by {
-            self.cursor_index -= dec_by;
+    fn dec_cursor(&mut self) {
+        if self.cursor_index >= 1 {
+            self.cursor_index -= 1;
         }
     }
 
