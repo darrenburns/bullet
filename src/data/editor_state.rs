@@ -153,11 +153,14 @@ impl StateApi for EditorState {
                                               .collect();
         
         let num_newlines = newline_indices.len();
-        let most_recent_newline = newline_indices.last().unwrap();
-        let x = self.cursor_index - most_recent_newline - 1;
         if num_newlines == 0 {
             self.cursor_index = 0;
-        } else if num_newlines == 1 {
+            return;
+        } 
+        
+        let most_recent_newline = newline_indices.last().unwrap();
+        let x = self.cursor_index - most_recent_newline - 1;
+        if num_newlines == 1 {
             // If we're on the second line
             self.cursor_index = x;
         } else {
@@ -170,24 +173,6 @@ impl StateApi for EditorState {
                 self.cursor_index = second_most_recent_newline + x + 1;
             }
         }
-
-        // let pos = self.get_cursor_position();
-        // let (x, y) = (pos.x, pos.y);
-        // if y == 0 {
-        //     self.set_cursor_index(0);
-        // } else {
-        //     let (prev_line_len, this_line_len) = {
-        //         let lines = self.get_editor_lines();
-        //         (lines[y-1].len() , lines[y].len())
-        //     };
-        //     if prev_line_len < x {
-        //         self.cursor_index -= x;
-        //         self.cursor_index -= 1;
-        //     } else {
-        //         self.cursor_index -= x;
-        //         self.cursor_index -= prev_line_len - x;
-        //     }
-        // }
     }
 
     fn cursor_start_next_word(&mut self) {

@@ -63,14 +63,15 @@ impl ModeInputHandler for CommandModeInputHandler {
         // Handle Command mode input - add chars to buffer until enter is pressed.
         // When enter is pressed, execute buffered commands and clear buffer.
         // Return to navigate mode.
-        // match event {
-            // '\r' => {
-            //     println!("{:?}", self.command_buffer);
-            //     self.process_command_buffer(state_api);
-            //     state_api.set_mode(Mode::Navigate);
-            // },
-            // _ => self.command_buffer.push(event),
-        // }
+        match event {
+            Event::Key(Key::Char('\n')) => {
+                println!("{:?}", self.command_buffer);
+                self.process_command_buffer(state_api);
+                state_api.set_mode(Mode::Navigate);
+            },
+            Event::Key(Key::Char(ch)) => self.command_buffer.push(ch),
+            _ => ()
+        }
     }
 }
 
