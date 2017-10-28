@@ -140,23 +140,54 @@ impl StateApi for EditorState {
     }
 
     fn cursor_line_up(&mut self) {
-        let pos = self.get_cursor_position();
-        let (x, y) = (pos.x, pos.y);
-        if y == 0 {
-            self.set_cursor_index(0);
+        if self.cursor_index == 0 {
+            return;
+        }
+        
+        // The indices of newlines before the cursor position
+        let newline_indices: Vec<usize> = self.piece_table.iter()
+                                              .take(self.cursor_index)
+                                              .enumerate()
+                                              .filter(|&(_, ch)| ch == '\n')
+                                              .map(|(index, _)| index)
+                                              .collect();
+        
+        let num_newlines = newline_indices.len();
+        let most_recent_newline = newline_indices.last().unwrap();
+        let x = self.cursor_index - most_recent_newline - 1;
+        if num_newlines == 0 {
+            self.cursor_index = 0;
+        } else if num_newlines == 1 {
+            // If we're on the second line
+            self.cursor_index = x;
         } else {
-            let (prev_line_len, this_line_len) = {
-                let lines = self.get_editor_lines();
-                (lines[y-1].len() , lines[y].len())
-            };
-            if prev_line_len < x {
-                self.cursor_index -= x;
-                self.cursor_index -= 1;
+            let second_most_recent_newline = newline_indices[num_newlines - 2];
+            if x > most_recent_newline - second_most_recent_newline {
+                // If our x coord is greater than the length of the line above, go to end of above line
+                self.cursor_index -= x + 1;
             } else {
-                self.cursor_index -= x;
-                self.cursor_index -= prev_line_len - x;
+                // If there's characters to move to directly above the cursor, move to char directly above
+                self.cursor_index = second_most_recent_newline + x + 1;
             }
         }
+
+        // let pos = self.get_cursor_position();
+        // let (x, y) = (pos.x, pos.y);
+        // if y == 0 {
+        //     self.set_cursor_index(0);
+        // } else {
+        //     let (prev_line_len, this_line_len) = {
+        //         let lines = self.get_editor_lines();
+        //         (lines[y-1].len() , lines[y].len())
+        //     };
+        //     if prev_line_len < x {
+        //         self.cursor_index -= x;
+        //         self.cursor_index -= 1;
+        //     } else {
+        //         self.cursor_index -= x;
+        //         self.cursor_index -= prev_line_len - x;
+        //     }
+        // }
     }
 
     fn cursor_start_next_word(&mut self) {
