@@ -1,8 +1,7 @@
-use std::cmp;
+use std::fmt;
 use std::process::exit;
 
 use termion::event::{Event, Key};
-use termion::clear;
 
 use controller::util::{repeater_chain_to_usize, repeat_state_op};
 use data::editor_state::{StateApi, EditorState, Mode};
@@ -17,6 +16,17 @@ pub enum ExprState {
     Argument,  // Argument to a function - leads to terminal state.
     Repeater { times: String },  // We've received a repeater (prefixing number), so we know the next state has to be another number, a function or a terminal character
     Operator { iterations: usize },  // e.g. 'w' to move to start of next word - leads to terminal state.
+}
+
+impl fmt::Display for ExprState {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            ExprState::Waiting => write!(f, "No modifiers active"),
+            ExprState::Repeater { ref times } => write!(f, "Repeat ( {} times )", times),
+            ExprState::Operator { ref iterations } => write!(f, "Operator ( {} iterations )", iterations),
+            ref expr @ _ => write!(f, "{:?}", expr)
+        }
+    }
 }
 
 pub trait ModeInputHandler {
@@ -97,7 +107,6 @@ impl ModeInputHandler for NavigateModeInputHandler {
 
             _ => move_to_state = ExprState::Operator { iterations: 1 },
         }
-
         let mut finalised_state = move_to_state.clone();
         self.goto_state(state_api, move_to_state);
 
@@ -110,6 +119,7 @@ impl ModeInputHandler for NavigateModeInputHandler {
                     Event::Key(Key::Char('j')) | Event::Key(Key::Down) => repeat_state_op(iterations, &StateApi::cursor_line_down, state_api),
                     Event::Key(Key::Char('k')) | Event::Key(Key::Up) => repeat_state_op(iterations, &StateApi::cursor_line_up, state_api),
 
+                    // Content aware navigation
                     Event::Key(Key::Char('w')) => repeat_state_op(iterations, &StateApi::cursor_start_next_word, state_api),
                     Event::Key(Key::Char('b')) => repeat_state_op(iterations, &StateApi::cursor_start_prev_word, state_api),
                     Event::Key(Key::Char('$')) => state_api.cursor_end_of_line(),
