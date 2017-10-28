@@ -4,6 +4,7 @@ use std::cmp;
 use termion::event::Event;
 
 use data::piece_table::PieceTable;
+use controller::input::ExprState;
 use controller::events::InputModeMultiplexer;
 
 pub struct EditorState {
@@ -12,6 +13,7 @@ pub struct EditorState {
     pub cursor_index: usize,
     piece_table: PieceTable,
     pub mode_input_buffer: Vec<char>,
+    pub expression_state: ExprState,
 }
 
 impl EditorState {
@@ -22,8 +24,8 @@ impl EditorState {
         piece_table: PieceTable,
         mode_input_buffer: Vec<char>
     ) -> Self {
-
-        EditorState { file_name, mode, cursor_index, piece_table, mode_input_buffer }
+        let expression_state = ExprState::Waiting;
+        EditorState { file_name, mode, cursor_index, piece_table, mode_input_buffer, expression_state }
     }
 
     pub fn set_mode(&mut self, new_mode: Mode) {

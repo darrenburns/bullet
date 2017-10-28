@@ -4,12 +4,19 @@ use std::process::exit;
 use termion::event::{Event, Key};
 use termion::clear;
 
+use controller::util::{repeater_chain_to_usize, repeat_state_op};
 use data::editor_state::{StateApi, EditorState, Mode};
 use data::io::*;
 
-pub enum CommandAtom {
-    Repeater(usize),
-    Parameterised(char),
+
+// State machine used to validate navigation expressions, represents the LAST event seen (not what is next expected)
+#[derive(Clone, Debug)]
+pub enum ExprState {
+    Waiting,  // There's nothing in the command buffer, can expect anything
+    UnaryFunction ( char ),  // The input received means we're expecting the next input to be a suitable argument
+    Argument,  // Argument to a function - leads to terminal state.
+    Repeater { times: String },  // We've received a repeater (prefixing number), so we know the next state has to be another number, a function or a terminal character
+    Operator { iterations: usize },  // e.g. 'w' to move to start of next word - leads to terminal state.
 }
 
 pub trait ModeInputHandler {
@@ -20,49 +27,105 @@ pub trait ModeInputHandler {
 }
 
 pub struct NavigateModeInputHandler {
+    expression_state: ExprState,  
     command_buffer: Vec<char>
 }
 impl NavigateModeInputHandler {
     pub fn new() -> Self {
         Self {
+            expression_state: ExprState::Waiting,
             command_buffer: vec![]
         }
     }
 
-    fn repeatable(&mut self, func: &Fn(&mut EditorState) -> (), state: &mut EditorState) {
-        let input_as_string: String = self.command_buffer.iter().collect();
-        let iterations = input_as_string.parse::<usize>().unwrap_or(1);
-        for _ in 0..iterations {
-            func(state);
-        }
-        self.command_buffer.clear();
+    fn goto_state(&mut self, editor_state: &mut EditorState, state: ExprState) {
+        editor_state.expression_state = state.clone();
+        self.expression_state = state;
+    }
+
+    fn get_state(&mut self) -> &ExprState {
+        &self.expression_state
     }
 
 }
 impl ModeInputHandler for NavigateModeInputHandler {
 
     fn handle_input(&mut self, event: Event, state_api: &mut EditorState) -> &Vec<char> {
-        match event {
-            // Repeaters - commands prefixed with any positive number N are repeated N times
-            Event::Key(Key::Char(c @ '0'...'9')) => self.push_input(c),
+        
+        let move_to_state;
+        match self.get_state() {
 
-            // Parametrised - navigation commands that take arguments and thus require further input
+            &ExprState::Waiting => {
+                match event {
+                    // Waiting -> Repeater transition
+                    Event::Key(Key::Char(c @ '0'...'9')) => {
+                        // self.push_input(c);
+                        move_to_state = ExprState::Repeater {times: c.to_string()};
+                    }
+                    // Sometimes we'll move to the Function state rather than just defaulting to Operator
+                    _ => move_to_state = ExprState::Operator { iterations: 1 }
+                }
+            },
 
-            // Basic directional movement
-            Event::Key(Key::Char('h')) | Event::Key(Key::Left) => self.repeatable(&StateApi::dec_cursor, state_api),
-            Event::Key(Key::Char('l')) | Event::Key(Key::Right) => self.repeatable(&StateApi::inc_cursor, state_api),
-            Event::Key(Key::Char('j')) | Event::Key(Key::Down) => self.repeatable(&StateApi::cursor_line_down, state_api),
-            Event::Key(Key::Char('k')) | Event::Key(Key::Up) => self.repeatable(&StateApi::cursor_line_up, state_api),
+            &ExprState::Repeater {ref times} => {
+                match event {
+                    // Repeater -> Repeater transition
+                    Event::Key(Key::Char(c @ '0'...'9')) => {
+                        move_to_state = ExprState::Repeater {times: format!("{}{}", times, c)};  // Keep appending Repeaters
+                     } 
+                    
+                    // Repeater -> Operator transition
+                    // Sometimes we'll move to the Function state rather than just defaulting to Operator
+                    _ => move_to_state = ExprState::Operator { iterations: repeater_chain_to_usize(times) }
+                }
+            },
 
-            // Content-aware movement
-            Event::Key(Key::Char('w')) => self.repeatable(&StateApi::cursor_start_next_word, state_api),
-            Event::Key(Key::Char('b')) => self.repeatable(&StateApi::cursor_start_prev_word, state_api),
-            Event::Key(Key::Char('$')) => state_api.cursor_end_of_line(),
 
-            Event::Key(Key::Char(';')) => state_api.set_mode(Mode::Command),
-            Event::Key(Key::Char('q')) => exit(0),
-            _ => (),
+            &ExprState::UnaryFunction(fn_char) => {
+                match event {
+                    _ => move_to_state = ExprState::Argument
+                }
+            }
+
+            // Waiting -> Operator transitions
+ 
+
+            // // Waiting -> UnaryFunction transition
+            
+            // // Nothing yet!
+
+
+            _ => move_to_state = ExprState::Operator { iterations: 1 },
         }
+
+        let mut finalised_state = move_to_state.clone();
+        self.goto_state(state_api, move_to_state);
+
+        // This'll deal only with termination (Arg and Op), should we be in a termination state after this block.
+        match self.get_state() {
+             &ExprState::Operator { ref iterations } => {
+                 match event {
+                    Event::Key(Key::Char('h')) | Event::Key(Key::Left) => repeat_state_op(iterations, &StateApi::dec_cursor, state_api),
+                    Event::Key(Key::Char('l')) | Event::Key(Key::Right) => repeat_state_op(iterations, &StateApi::inc_cursor, state_api),
+                    Event::Key(Key::Char('j')) | Event::Key(Key::Down) => repeat_state_op(iterations, &StateApi::cursor_line_down, state_api),
+                    Event::Key(Key::Char('k')) | Event::Key(Key::Up) => repeat_state_op(iterations, &StateApi::cursor_line_up, state_api),
+
+                    Event::Key(Key::Char('w')) => repeat_state_op(iterations, &StateApi::cursor_start_next_word, state_api),
+                    Event::Key(Key::Char('b')) => repeat_state_op(iterations, &StateApi::cursor_start_prev_word, state_api),
+                    Event::Key(Key::Char('$')) => state_api.cursor_end_of_line(),
+
+                    Event::Key(Key::Char(';')) => state_api.set_mode(Mode::Command),
+                    Event::Key(Key::Char('q')) => exit(0),
+                    _ => ()
+                 }
+                 finalised_state = ExprState::Waiting;
+             },
+             &ExprState::Argument => finalised_state = ExprState::Waiting,
+             _ => (),  
+             // All of the other cases are waiting for other input, 
+             // and they've set their states in the first match block.
+        }
+        self.goto_state(state_api, finalised_state);
         self.get_input_buffer()
 
         // Handle input in navigation mode here.

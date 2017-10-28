@@ -69,9 +69,10 @@ fn draw_status_line<W: Write>(out: &mut W, term_height: usize, term_width: usize
     let mode_input_buf: String = state.get_mode_input_buffer().into_iter().collect();
     let mode_text = format!("{} ({})", state.get_mode(), mode_input_buf);
     let left_side = format!(
-        "Editing: {file_name} | Mode: {mode}",
+        "Editing: {file_name} | Mode: {mode} | State: {state:?}",
         file_name=state.get_active_file_name(),
-        mode=mode_text
+        mode=mode_text,
+        state=state.expression_state
     );
 
     let cursor_pos = state.get_cursor_position();

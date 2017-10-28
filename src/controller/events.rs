@@ -52,6 +52,7 @@ pub fn event_loop(highlighter: &mut HighlightLines, state: &mut EditorState) {
     render(&mut out, highlighter, state);
 
     let mut input_mode_manager = InputModeMultiplexer::new();
+    let mut i = 0;
     loop {
         let mut events = stdin().events();
 
@@ -59,6 +60,7 @@ pub fn event_loop(highlighter: &mut HighlightLines, state: &mut EditorState) {
             let mode_input_buffer = input_mode_manager.do_action_for_input(event.unwrap(), state);
             state.mode_input_buffer = mode_input_buffer.clone();
         }
+        // i += 1;
         render(&mut out, highlighter, state);
     }
 
