@@ -17,10 +17,10 @@ impl ModeInputHandler for NavigateModeInputHandler {
     fn handle_input(&mut self, event: Event, state_api: &mut EditorState) {
         match event {
             // Basic directional movement
-            Event::Key(Key::Char('h')) => state_api.dec_cursor(1),
-            Event::Key(Key::Char('l')) => state_api.inc_cursor(1),
-            Event::Key(Key::Char('j')) => state_api.cursor_line_down(),
-            Event::Key(Key::Char('k')) => state_api.cursor_line_up(),
+            Event::Key(Key::Char('h')) | Event::Key(Key::Left) => state_api.dec_cursor(1),
+            Event::Key(Key::Char('l')) | Event::Key(Key::Right) => state_api.inc_cursor(1),
+            Event::Key(Key::Char('j')) | Event::Key(Key::Down) => state_api.cursor_line_down(),
+            Event::Key(Key::Char('k')) | Event::Key(Key::Up) => state_api.cursor_line_up(),
 
             // Content-aware movement
             Event::Key(Key::Char('w')) => state_api.cursor_start_next_word(),
@@ -65,7 +65,6 @@ impl ModeInputHandler for CommandModeInputHandler {
         // Return to navigate mode.
         match event {
             Event::Key(Key::Char('\n')) => {
-                println!("{:?}", self.command_buffer);
                 self.process_command_buffer(state_api);
                 state_api.set_mode(Mode::Navigate);
             },
