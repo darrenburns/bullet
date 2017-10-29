@@ -56,13 +56,66 @@ pub enum ExprState {
     Execute { repeatable: Repeatable },  // e.g. 'w' to move to start of next word - leads to terminal state.
 }
 
+impl fmt::Display for Action {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let to_write = match *self {
+            Action::Right => "Right",
+            Action::Left => "Left",
+            Action::Down => "Down",
+            Action::Up => "Up",
+            Action::StartNextWord => "StartNextWord",
+            Action::StartPrevWord => "StartPrevWord",
+            Action::StartOfLine => "StartOfLine",
+            Action::EndOfLine => "EndOfLine",
+            Action::ToCommandMode => "ToCommandMode",
+            Action::ExitEditor => "EcitEditor"
+        };
+
+        write!(f, "{}", to_write)
+    }
+}
+
+
+impl fmt::Display for FnArg {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            FnArg::NoArg => write!(f, "_"),
+            FnArg::Argument(arg) => write!(f, "{}", arg)
+        }
+    }
+}
+
+impl fmt::Display for FnAlias {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let to_write = match *self {
+            FnAlias::FindNext => "FindNext",
+            FnAlias::NoOp => "NoOp"
+        };
+        write!(f, "{}", to_write)
+    }
+}
+
+impl fmt::Display for ExecutableExpr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            ExecutableExpr::Operator( ref action) => 
+                write!(f, "CursorTo ( {} )", &action),
+
+            ExecutableExpr::Function( ref alias, ref arg) => 
+                write!(f, "{} ( {} )", &alias, &arg)
+        }
+    }
+}
+
 impl fmt::Display for ExprState {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            ExprState::Waiting => write!(f, "No modifiers active"),
-            ExprState::Repeater { ref repeatable } => write!(f, "{:?}", repeatable),
-            ExprState::Function { ref repeatable } => write!(f, "{:?}", repeatable),
-            ref expr @ _ => write!(f, "{:?}", expr)
+            ExprState::Waiting => write!(f, "None"),
+            ExprState::Repeater { ref repeatable } => 
+                write!(f, "Repeat ( {}x, _ )", &repeatable.times),
+            ExprState::Function { ref repeatable } => 
+                write!(f, "Repeat ( {}x, {} )", &repeatable.times, &repeatable.clone().expr.unwrap()),
+            ref expr @ _ => write!(f, "{}", expr)
         }
     }
 }
