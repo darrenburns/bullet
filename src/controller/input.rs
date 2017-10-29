@@ -4,7 +4,7 @@ use std::process::exit;
 use termion::event::{Event, Key};
 
 use controller::util::{repeater_chain_to_usize, repeat_state_op};
-use controller::commands::{build_fn_from_event, build_op_from_event};
+use controller::commands::{event_to_fn_alias, build_op_from_event};
 use data::editor_state::{StateApi, EditorState, Mode};
 use data::io::*;
 
@@ -25,6 +25,7 @@ pub enum Action {
 #[derive(Clone, Debug)]
 pub enum FnAlias {
     FindNext,
+    NoOp
 }
 
 #[derive(Clone, Debug)]
@@ -116,24 +117,26 @@ impl ModeInputHandler for NavigateModeInputHandler {
 
                     // Either move to Function state if the input is a Function name, or straight to Execute
                     _ => {
-                        match build_fn_from_event(&event) {
-                            // We've found a Function for this event, move into Function state,
-                            // which will await the argument input
-                            Some(expr) => move_to_state = ExprState::Function {
-                                repeatable: Repeatable {
-                                    times: String::from("1"),
-                                    expr: Some(expr)
-                                }
-                            },
+                        match event_to_fn_alias(&event) {
                             // No function was found, so we don't expect any further input.
                             // We move to state Execute, which causes the actual execution of the ExecutableExpr
                             // we've built up.
-                            None => move_to_state = ExprState::Execute {
+                            FnAlias::NoOp => move_to_state = ExprState::Execute {
                                 repeatable: Repeatable {
                                     times: String::from("1"),
                                     expr: build_op_from_event(&event)
                                 }
-                            }
+                            },
+                            // We've found a Function for this event, move into Function state,
+                            // which will await the argument input
+                            alias => move_to_state = ExprState::Function {
+                                repeatable: Repeatable {
+                                    times: String::from("1"),
+                                    expr: Some(
+                                        ExecutableExpr::Function(alias, FnArg::NoArg)
+                                    )
+                                }
+                            },
                         }
                     }
                 }
@@ -153,34 +156,51 @@ impl ModeInputHandler for NavigateModeInputHandler {
                     
                     // Repeater -> Function transition
                     _ => {
-                        match build_fn_from_event(&event) {
-                            // We've found a Function for this event, move into Function state,
-                            // which will await the argument input
-                            Some(expr) => move_to_state = ExprState::Function {
-                                repeatable: Repeatable {
-                                    times: repeatable.clone().times,
-                                    expr: Some(expr)
-                                }
-                            },
-                            None => move_to_state = ExprState::Execute {
+                        match event_to_fn_alias(&event) {
+                            // No functions match, execute repeated Operation
+                            FnAlias::NoOp => move_to_state = ExprState::Execute {
                                 repeatable: Repeatable {
                                     times: repeatable.clone().times,
                                     expr: build_op_from_event(&event)
                                 }
-                            }
+                            },
+
+                            // A Function exists for the input char, enter Function stage
+                            // with the appropriate FnAlias activated.
+                            alias => move_to_state = ExprState::Function {
+                                repeatable: Repeatable {
+                                    times: repeatable.clone().times,
+                                    expr: Some(
+                                        ExecutableExpr::Function(event_to_fn_alias(&event), FnArg::NoArg)
+                                    )
+                                }
+                            },
                         }
                     }
                 }
             },
 
+            // We're already in the Function stage, so this input is the arg
             &ExprState::Function { ref repeatable } => {
+                // Grab the alias of the function from the Function stage
+                let repeatable_clone = repeatable.clone();
+                let alias = match repeatable_clone {
+                    Repeatable {
+                        times: _, 
+                        expr: Some(ExecutableExpr::Function(alias, _))
+                    } => alias,
+                    _ => exit(0)
+                };
+
                 match event {
                     Event::Key(Key::Char(ch)) => {
                         // We've received an argument, so move to the Execute state, passing Argument through
                         move_to_state = ExprState::Execute {
                             repeatable: Repeatable {
-                                times: repeatable.clone().times,
-                                expr: build_fn_from_event(&event)
+                                times: repeatable_clone.times,
+                                expr: Some(
+                                    ExecutableExpr::Function(alias, FnArg::Argument(ch))
+                                )
                             }
                         }
                     }
@@ -248,18 +268,25 @@ impl ModeInputHandler for NavigateModeInputHandler {
                                 &StateApi::cursor_end_of_line, 
                                 state_api
                             ),
-                        &Action::ToCommandMode => state_api.cursor_end_of_line(), 
+                        &Action::ToCommandMode => state_api.set_mode(Mode::Command), 
                         &Action::ExitEditor => exit(0), 
                         _ => ()
 
                     }
-                &Repeatable { ref times, expr: Some(ExecutableExpr::Function(ref alias, ref arg)) } =>
+                
+                &Repeatable { ref times, expr: Some(ExecutableExpr::Function(ref alias, FnArg::Argument(ref arg))) } =>
                     match alias {
-                        &FnAlias::FindNext => repeat_state_op(
-                            &repeater_chain_to_usize(times),
-                            &StateApi::cursor_end_of_line,
-                            state_api
-                        )
+                        &FnAlias::NoOp => (),
+                        
+                        // TODO: FindNext implementation is just for testing purposes atm.
+                        &FnAlias::FindNext => {
+                            repeat_state_op(
+                                &(arg.to_string().parse::<usize>().unwrap_or(1) * 
+                                    repeater_chain_to_usize(times)),
+                                &StateApi::cursor_line_down,
+                                state_api
+                            );
+                        }
                     },
                 _ => ()
             }

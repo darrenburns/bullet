@@ -2,14 +2,10 @@ use controller::input::*;
 
 use termion::event::{Event, Key};
 
-pub fn build_fn_from_event(event: &Event) -> Option<ExecutableExpr> {
-    // We need to use the same matching logic for both the 
-    // Waiting -> Function transition and the Repeater -> Function
-    // transition.
+pub fn event_to_fn_alias(event: &Event) -> FnAlias {
     match event {
-        &Event::Key(Key::Char('f')) => 
-            Option::from(ExecutableExpr::Function (FnAlias::FindNext, FnArg::NoArg)),
-        _ => None,
+        &Event::Key(Key::Char('f')) => FnAlias::FindNext,
+        _ => FnAlias::NoOp,
     }
 }
 
