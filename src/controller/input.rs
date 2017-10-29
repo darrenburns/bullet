@@ -4,26 +4,63 @@ use std::process::exit;
 use termion::event::{Event, Key};
 
 use controller::util::{repeater_chain_to_usize, repeat_state_op};
+use controller::commands::{build_fn_from_event, build_op_from_event};
 use data::editor_state::{StateApi, EditorState, Mode};
 use data::io::*;
 
+#[derive(Clone, Debug)]
+pub enum Action {
+    Right,
+    Left,
+    Down,
+    Up,
+    StartNextWord,
+    StartPrevWord,
+    StartOfLine,
+    EndOfLine,
+    ToCommandMode,
+    ExitEditor
+}
+
+#[derive(Clone, Debug)]
+pub enum FnAlias {
+    FindNext,
+}
+
+#[derive(Clone, Debug)]
+pub enum FnArg {
+    NoArg,
+    Argument(char),
+}
+
+type Argument = char;
+type MappedKey = char;
+#[derive(Debug, Clone)]
+pub struct Repeatable { 
+    pub times: String, 
+    pub expr: Option<ExecutableExpr> 
+}
+#[derive(Debug, Clone)]
+pub enum ExecutableExpr {
+    Operator ( Action ),
+    Function ( FnAlias, FnArg )
+}
 
 // State machine used to validate navigation expressions, represents the LAST event seen (not what is next expected)
 #[derive(Clone, Debug)]
 pub enum ExprState {
     Waiting,  // There's nothing in the command buffer, can expect anything
-    UnaryFunction ( char ),  // The input received means we're expecting the next input to be a suitable argument
-    Argument,  // Argument to a function - leads to terminal state.
-    Repeater { times: String },  // We've received a repeater (prefixing number), so we know the next state has to be another number, a function or a terminal character
-    Operator { iterations: usize },  // e.g. 'w' to move to start of next word - leads to terminal state.
+    Function { repeatable: Repeatable },  // The input received means we're expecting the next input to be a suitable argument
+    Repeater { repeatable: Repeatable },  // We've received a repeater (prefixing number), so we know the next state has to be another number, a function or a terminal character
+    Execute { repeatable: Repeatable },  // e.g. 'w' to move to start of next word - leads to terminal state.
 }
 
 impl fmt::Display for ExprState {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             ExprState::Waiting => write!(f, "No modifiers active"),
-            ExprState::Repeater { ref times } => write!(f, "Repeat ( {} times )", times),
-            ExprState::Operator { ref iterations } => write!(f, "Operator ( {} iterations )", iterations),
+            ExprState::Repeater { ref repeatable } => write!(f, "{:?}", repeatable),
+            ExprState::Function { ref repeatable } => write!(f, "{:?}", repeatable),
             ref expr @ _ => write!(f, "{:?}", expr)
         }
     }
@@ -67,74 +104,168 @@ impl ModeInputHandler for NavigateModeInputHandler {
 
             &ExprState::Waiting => {
                 match event {
-                    // Waiting -> Repeater transition
+                    // Waiting -> Repeater transition (We've received character 0-9)
                     Event::Key(Key::Char(c @ '0'...'9')) => {
-                        // self.push_input(c);
-                        move_to_state = ExprState::Repeater {times: c.to_string()};
+                        move_to_state = ExprState::Repeater { 
+                            repeatable: Repeatable { 
+                                times: c.to_string(), 
+                                expr: None,
+                            }
+                        };
                     }
-                    // Sometimes we'll move to the Function state rather than just defaulting to Operator
-                    _ => move_to_state = ExprState::Operator { iterations: 1 }
+
+                    // Either move to Function state if the input is a Function name, or straight to Execute
+                    _ => {
+                        match build_fn_from_event(&event) {
+                            // We've found a Function for this event, move into Function state,
+                            // which will await the argument input
+                            Some(expr) => move_to_state = ExprState::Function {
+                                repeatable: Repeatable {
+                                    times: String::from("1"),
+                                    expr: Some(expr)
+                                }
+                            },
+                            // No function was found, so we don't expect any further input.
+                            // We move to state Execute, which causes the actual execution of the ExecutableExpr
+                            // we've built up.
+                            None => move_to_state = ExprState::Execute {
+                                repeatable: Repeatable {
+                                    times: String::from("1"),
+                                    expr: build_op_from_event(&event)
+                                }
+                            }
+                        }
+                    }
                 }
             },
 
-            &ExprState::Repeater {ref times} => {
+            &ExprState::Repeater { ref repeatable } => {
                 match event {
                     // Repeater -> Repeater transition
                     Event::Key(Key::Char(c @ '0'...'9')) => {
-                        move_to_state = ExprState::Repeater {times: format!("{}{}", times, c)};  // Keep appending Repeaters
-                     } 
+                        move_to_state = ExprState::Repeater { 
+                            repeatable: Repeatable {
+                                times: format!("{}{}", repeatable.times, c),
+                                expr: None
+                            }  
+                        };
+                     },
                     
-                    // Repeater -> Operator transition
-                    // Sometimes we'll move to the Function state rather than just defaulting to Operator
-                    _ => move_to_state = ExprState::Operator { iterations: repeater_chain_to_usize(times) }
+                    // Repeater -> Function transition
+                    _ => {
+                        match build_fn_from_event(&event) {
+                            // We've found a Function for this event, move into Function state,
+                            // which will await the argument input
+                            Some(expr) => move_to_state = ExprState::Function {
+                                repeatable: Repeatable {
+                                    times: repeatable.clone().times,
+                                    expr: Some(expr)
+                                }
+                            },
+                            None => move_to_state = ExprState::Execute {
+                                repeatable: Repeatable {
+                                    times: repeatable.clone().times,
+                                    expr: build_op_from_event(&event)
+                                }
+                            }
+                        }
+                    }
                 }
             },
 
-
-            &ExprState::UnaryFunction(fn_char) => {
+            &ExprState::Function { ref repeatable } => {
                 match event {
-                    _ => move_to_state = ExprState::Argument
+                    Event::Key(Key::Char(ch)) => {
+                        // We've received an argument, so move to the Execute state, passing Argument through
+                        move_to_state = ExprState::Execute {
+                            repeatable: Repeatable {
+                                times: repeatable.clone().times,
+                                expr: build_fn_from_event(&event)
+                            }
+                        }
+                    }
+                    _ => move_to_state = ExprState::Waiting
                 }
             }
 
-            // Waiting -> Operator transitions
- 
-
-            // // Waiting -> UnaryFunction transition
-            
-            // // Nothing yet!
-
-
-            _ => move_to_state = ExprState::Operator { iterations: 1 },
+            _ => move_to_state = ExprState::Waiting,
         }
         let mut finalised_state = move_to_state.clone();
         self.goto_state(state_api, move_to_state);
 
-        // This'll deal only with termination (Arg and Op), should we be in a termination state after this block.
-        match self.get_state() {
-             &ExprState::Operator { ref iterations } => {
-                 match event {
-                    Event::Key(Key::Char('h')) | Event::Key(Key::Left) => repeat_state_op(iterations, &StateApi::dec_cursor, state_api),
-                    Event::Key(Key::Char('l')) | Event::Key(Key::Right) => repeat_state_op(iterations, &StateApi::inc_cursor, state_api),
-                    Event::Key(Key::Char('j')) | Event::Key(Key::Down) => repeat_state_op(iterations, &StateApi::cursor_line_down, state_api),
-                    Event::Key(Key::Char('k')) | Event::Key(Key::Up) => repeat_state_op(iterations, &StateApi::cursor_line_up, state_api),
+        // This'll deal only with termination (when the latest input has put us into the Execute state)
+        if let &ExprState::Execute { ref repeatable } = self.get_state() {
+            match repeatable {
 
-                    // Content aware navigation
-                    Event::Key(Key::Char('w')) => repeat_state_op(iterations, &StateApi::cursor_start_next_word, state_api),
-                    Event::Key(Key::Char('b')) => repeat_state_op(iterations, &StateApi::cursor_start_prev_word, state_api),
-                    Event::Key(Key::Char('$')) => state_api.cursor_end_of_line(),
+                // Handle operators
+                &Repeatable { ref times, expr: Some(ExecutableExpr::Operator(ref action)) } =>
+                    match action {
+                        &Action::Right =>
+                            repeat_state_op(
+                                &repeater_chain_to_usize(times), 
+                                &StateApi::inc_cursor, 
+                                state_api
+                            ),
+                        &Action::Left =>
+                            repeat_state_op(
+                                &repeater_chain_to_usize(times), 
+                                &StateApi::dec_cursor, 
+                                state_api
+                            ),
+                        &Action::Down =>
+                            repeat_state_op(
+                                &repeater_chain_to_usize(times), 
+                                &StateApi::cursor_line_down, 
+                                state_api
+                            ),
+                        &Action::Up =>
+                            repeat_state_op(
+                                &repeater_chain_to_usize(times), 
+                                &StateApi::cursor_line_up, 
+                                state_api
+                            ),
+                        &Action::StartNextWord =>
+                            repeat_state_op(
+                                &repeater_chain_to_usize(times), 
+                                &StateApi::cursor_start_next_word, 
+                                state_api
+                            ),
+                        &Action::StartPrevWord =>
+                            repeat_state_op(
+                                &repeater_chain_to_usize(times), 
+                                &StateApi::cursor_start_prev_word, 
+                                state_api
+                            ),
+                        &Action::StartOfLine =>
+                            repeat_state_op(
+                                &repeater_chain_to_usize(times), 
+                                &StateApi::cursor_start_of_line, 
+                                state_api
+                            ),
+                        &Action::EndOfLine =>
+                            repeat_state_op(
+                                &repeater_chain_to_usize(times), 
+                                &StateApi::cursor_end_of_line, 
+                                state_api
+                            ),
+                        &Action::ToCommandMode => state_api.cursor_end_of_line(), 
+                        &Action::ExitEditor => exit(0), 
+                        _ => ()
 
-                    Event::Key(Key::Char(';')) => state_api.set_mode(Mode::Command),
-                    Event::Key(Key::Char('q')) => exit(0),
-                    _ => ()
-                 }
-                 finalised_state = ExprState::Waiting;
-             },
-             &ExprState::Argument => finalised_state = ExprState::Waiting,
-             _ => (),  
-             // All of the other cases are waiting for other input, 
-             // and they've set their states in the first match block.
+                    }
+                &Repeatable { ref times, expr: Some(ExecutableExpr::Function(ref alias, ref arg)) } =>
+                    match alias {
+                        &FnAlias::FindNext => repeat_state_op(
+                            &repeater_chain_to_usize(times),
+                            &StateApi::cursor_end_of_line,
+                            state_api
+                        )
+                    },
+                _ => ()
+            }
+            finalised_state = ExprState::Waiting;
         }
+
         self.goto_state(state_api, finalised_state);
         self.get_input_buffer()
 

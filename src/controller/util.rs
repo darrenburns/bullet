@@ -1,4 +1,6 @@
 use data::editor_state::EditorState;
+use controller::input::FnAlias;
+
 
 pub fn repeater_chain_to_usize(repeater_chain: &str) -> usize {
     repeater_chain.parse::<usize>().unwrap_or(1)
